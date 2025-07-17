@@ -330,8 +330,8 @@
         // ===================================================================================
 
         const BYBIT_INTERVAL = "60"; 
-        const BYBIT_CATEGORY = "spot"; // Para obtener solo pares SPOT
-        const BYBIT_LIMIT = 200; // Número de velas (puntos de datos) a solicitar de Bybit. Máx 1000.
+        const BYBIT_CATEGORY = "spot"; 
+        const BYBIT_LIMIT = 200; 
 
         const UPDATE_INTERVAL_SELECTED_CRYPTO = 120000; // 2 minutos para actualizar la crypto seleccionada
         const UPDATE_INTERVAL_ALL_CRYPTOS = 5 * 60 * 1000; // 5 minutos para actualizar TODAS las oportunidades
@@ -368,9 +368,8 @@
         let priceChartInstance, countdownInterval;
         let isProcessingAllCryptos = false;
 
-        let allCryptos = []; // Almacenará los símbolos de todas las criptomonedas del select
+        let allCryptos = []; 
 
-        // Guarda los datos de precio y los indicadores calculados para la cripto actual (para redibujar el gráfico)
         let currentPriceDataCache = null;
         let currentSmaShortCache = null;
         let currentSmaLongCache = null;
@@ -385,6 +384,11 @@
         function initStaticCryptoList() {
             allCryptos = [];
             const options = coinSelect.options;
+            if (options.length === 0) {
+                console.error("Error: No se encontraron opciones en el selector de criptomonedas. Asegúrate de que el HTML esté cargado correctamente.");
+                // Opcional: Mostrar un mensaje al usuario en la UI.
+                return;
+            }
             for (let i = 0; i < options.length; i++) {
                 allCryptos.push(options[i].value);
             }
@@ -416,9 +420,11 @@
 
             const selectedSymbol = coinSelect.value;
             if (!selectedSymbol) {
-                console.warn("No hay criptomoneda seleccionada para el análisis detallado.");
+                console.warn("No hay criptomoneda seleccionada para el análisis detallado (o la lista está vacía).");
                 if (priceChartInstance) priceChartInstance.destroy();
-                priceNoDataMessage.style.display = 'flex';
+                priceChartCanvas.style.display = 'none'; // Ocultar canvas
+                priceNoDataMessage.textContent = "No hay criptomoneda seleccionada o datos iniciales."
+                priceNoDataMessage.style.display = 'flex'; // Mostrar mensaje
                 return;
             }
             console.log(`Obteniendo datos de Bybit para: ${selectedSymbol}`);
@@ -434,8 +440,9 @@
                 updateTimerDiv.textContent = "Datos insuficientes para indicadores";
                 
                 if (priceChartInstance) priceChartInstance.destroy();
-                priceChartCanvas.style.display = 'none';
-                priceNoDataMessage.style.display = 'flex';
+                priceChartCanvas.style.display = 'none'; // Ocultar canvas
+                priceNoDataMessage.textContent = "Datos insuficientes para gráficos."
+                priceNoDataMessage.style.display = 'flex'; // Mostrar mensaje
                 return;
             }
 
@@ -451,7 +458,6 @@
             currentRsiCache = calculateRSI(closingPrices, RSI_PERIOD);
             
             console.log("Renderizando gráficos para la cripto seleccionada...");
-            // Pasa todos los datos calculados para que renderPriceChart decida cuáles dibujar
             renderPriceChart(currentPriceDataCache, currentSmaShortCache, currentSmaLongCache, currentBollingerBandsCache, currentRsiCache);
             
             console.log("Actualizando señales individuales...");
@@ -470,15 +476,21 @@
                 console.log("Ya se está procesando el análisis de todas las criptos. Saltando esta ejecución.");
                 return;
             }
+            if (allCryptos.length === 0) {
+                 console.warn("No hay criptomonedas en la lista estática para actualizar las oportunidades.");
+                 renderOpportunityColumns({ buy: [], sell: [], hold: [], error: ['No hay criptos para mostrar.'] });
+                 return;
+            }
+
             isProcessingAllCryptos = true;
             console.log("Iniciando análisis para TODAS las criptomonedas (carga progresiva)...");
 
             const tempRecommendations = { buy: [], sell: [], hold: [], error: [] }; 
-            renderOpportunityColumns(tempRecommendations); // Renderiza los mensajes iniciales
+            renderOpportunityColumns(tempRecommendations); // Renderiza los mensajes iniciales (vacíos o cargando)
 
             for (let i = 0; i < allCryptos.length; i++) {
                 const symbol = allCryptos[i];
-                // console.log(`Procesando oportunidad para: ${symbol} (${i + 1}/${allCryptos.length})`); // Descomentar para depuración granular
+                // console.log(`Procesando oportunidad para: ${symbol} (${i + 1}/${allCryptos.length})`);
 
                 try {
                     const prices = await getCryptoData(symbol, BYBIT_INTERVAL, BYBIT_CATEGORY, BYBIT_LIMIT);
@@ -576,24 +588,33 @@
 
 
         document.addEventListener('DOMContentLoaded', async () => {
-            initStaticCryptoList(); // Inicializa la lista estática
+            initStaticCryptoList(); 
 
-            runSelectedCryptoAnalysis();
-            updateAllCryptosOpportunities();
+            // Verificar si hay criptomonedas para procesar antes de llamar
+            if (allCryptos.length > 0) {
+                runSelectedCryptoAnalysis();
+                updateAllCryptosOpportunities();
 
-            setInterval(runSelectedCryptoAnalysis, UPDATE_INTERVAL_SELECTED_CRYPTO);
-            setInterval(updateAllCryptosOpportunities, UPDATE_INTERVAL_ALL_CRYPTOS); 
+                setInterval(runSelectedCryptoAnalysis, UPDATE_INTERVAL_SELECTED_CRYPTO);
+                setInterval(updateAllCryptosOpportunities, UPDATE_INTERVAL_ALL_CRYPTOS); 
+            } else {
+                console.error("No se encontraron criptomonedas en la lista estática. La aplicación no puede iniciar correctamente.");
+                priceNoDataMessage.textContent = "Error: No se encontraron criptomonedas en la lista.";
+                priceNoDataMessage.style.display = 'flex';
+                // También actualizar el panel de oportunidades para reflejar el error
+                renderOpportunityColumns({ buy: [], sell: [], hold: [], error: ['No hay criptos en la lista.'] });
+            }
         });
 
         coinSelect.addEventListener('change', runSelectedCryptoAnalysis);
 
-        // Listener para los checkboxes de indicadores.
         const indicatorCheckboxes = document.querySelectorAll('#indicator-selection-panel input[type="checkbox"]');
         indicatorCheckboxes.forEach(checkbox => {
             checkbox.addEventListener('change', () => {
-                // Volver a renderizar el gráfico con los datos en caché
-                if (currentPriceDataCache) {
+                if (currentPriceDataCache) { // Solo redibujar si hay datos en caché
                     renderPriceChart(currentPriceDataCache, currentSmaShortCache, currentSmaLongCache, currentBollingerBandsCache, currentRsiCache);
+                } else {
+                    console.warn("No hay datos en caché para redibujar el gráfico con los indicadores.");
                 }
             });
         });
@@ -718,7 +739,6 @@
             }
             return rsiValues;
         }
-
     </script>
 </body>
 </html>
