@@ -98,24 +98,11 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             margin-top: 20px;
-            height: 450px;
+            height: 450px; /* Aumentado la altura de los contenedores de gráfico */
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
-        }
-        .rsi-explanation {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background-color: rgba(30, 30, 30, 0.8);
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 0.85em;
-            color: #ccc;
-            max-width: 250px;
-            z-index: 10;
-            pointer-events: none;
         }
         .no-data-message {
             color: #e0e0e0;
@@ -189,6 +176,35 @@
         .col-sell li { border-left: 4px solid #dc3545; }
         .col-hold li { border-left: 4px solid #6c757d; }
 
+        /* NUEVOS ESTILOS para el panel de selección de indicadores */
+        #indicator-selection-panel {
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin-top: 20px;
+            width: 95%;
+            max-width: 1200px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            align-items: center;
+        }
+        #indicator-selection-panel div {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #indicator-selection-panel label {
+            font-size: 1em;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+        #indicator-selection-panel input[type="checkbox"] {
+            transform: scale(1.2); /* Agrandar un poco el checkbox */
+            cursor: pointer;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -199,52 +215,13 @@
 
     <div class="top-section-container">
         <div id="controls">
-            <label for="coin-select">Elige una Criptomoneda (para análisis detallado):</label>
+            <label for="coin-select">Elige una Criptomoneda:</label>
             <select id="coin-select">
-                <option value="USDTUSDC">USDT/USDC</option>
-                <option value="USDCUSDT">USDC/USDT</option>
-                <option value="BUSDUSDT">BUSD/USDT</option>
-                <option value="DAIUSDT">DAI/USDT</option>
-                
-                <option value="BTCUSDT" selected>Bitcoin (BTC/USDT)</option>
-                <option value="ETHUSDT">Ethereum (ETH/USDT)</option>
-                <option value="BNBUSDT">BNB (BNB/USDT)</option>
-                <option value="XRPUSDT">XRP (XRP/USDT)</option>
-                <option value="SOLUSDT">Solana (SOL/USDT)</option>
-                <option value="ADAUSDT">Cardano (ADA/USDT)</option>
-                <option value="DOGEUSDT">Dogecoin (DOGE/USDT)</option>
-                <option value="SHIBUSDT">Shiba Inu (SHIB/USDT)</option>
-                <option value="DOTUSDT">Polkadot (DOT/USDT)</option>
-                <option value="LTCUSDT">Litecoin (LTC/USDT)</option>
-                <option value="LINKUSDT">Chainlink (LINK/USDT)</option>
-                <option value="MATICUSDT">Polygon (MATIC/USDT)</option>
-                <option value="TRXUSDT">Tron (TRX/USDT)</option>
-                <option value="AVAXUSDT">Avalanche (AVAX/USDT)</option>
-                <option value="UNIUSDT">Uniswap (UNI/USDT)</option>
-                <option value="FILUSDT">Filecoin (FIL/USDT)</option>
-                <option value="ICPUSDT">Internet Computer (ICP/USDT)</option>
-                <option value="APTUSDT">Aptos (APT/USDT)</option>
-                <option value="SUIUSDT">Sui (SUI/USDT)</option>
-                <option value="NEARUSDT">NEAR Protocol (NEAR/USDT)</option>
-                <option value="ATOMUSDT">Cosmos (ATOM/USDT)</option>
-                <option value="ARBUSD">Arbitrum (ARB/USDT)</option>
-                <option value="OPUSDT">Optimism (OP/USDT)</option>
-                <option value="IMXUSDT">Immutable X (IMX/USDT)</option>
-                <option value="AAVEUSDT">Aave (AAVE/USDT)</option>
-                <option value="ALGOUSDT">Algorand (ALGO/USDT)</option>
-                <option value="FTMUSDT">Fantom (FTM/USDT)</option>
-                <option value="VETUSDT">VeChain (VET/USDT)</option>
-                <option value="CHZUSDT">Chiliz (CHZ/USDT)</option>
-                <option value="GRTUSDT">The Graph (GRT/USDT)</option>
-                <option value="AXSUSDT">Axie Infinity (AXS/USDT)</option>
-                <option value="EOSUSDT">EOS (EOS/USDT)</option>
-                <option value="KLAYUSDT">Klaytn (KLAY/USDT)</option>
-                <option value="SANDUSDT">The Sandbox (SAND/USDT)</option>
-                <option value="MANAUSDT">Decentraland (MANA/USDT)</option>
+                <option value="">Cargando criptomonedas...</option>
             </select>
             <div id="update-timer"></div>
             <p style="font-size: 0.8em; color: #888; margin-top: 10px;">
-                Selecciona una criptomoneda para ver su análisis detallado (gráficos y señales individuales).
+                Esta lista se carga dinámicamente desde la API de Bybit.
             </p>
         </div>
 
@@ -277,6 +254,33 @@
         </div>
     </div>
 
+    <div id="indicator-selection-panel" class="container">
+        <div>
+            <input type="checkbox" id="toggle-sma-short" checked>
+            <label for="toggle-sma-short">SMA Corta</label>
+        </div>
+        <div>
+            <input type="checkbox" id="toggle-sma-long" checked>
+            <label for="toggle-sma-long">SMA Larga</label>
+        </div>
+        <div>
+            <input type="checkbox" id="toggle-bb-upper" checked>
+            <label for="toggle-bb-upper">BB Superior</label>
+        </div>
+        <div>
+            <input type="checkbox" id="toggle-bb-middle" checked>
+            <label for="toggle-bb-middle">BB Media</label>
+        </div>
+        <div>
+            <input type="checkbox" id="toggle-bb-lower" checked>
+            <label for="toggle-bb-lower">BB Inferior</label>
+        </div>
+        <div>
+            <input type="checkbox" id="toggle-rsi" checked>
+            <label for="toggle-rsi">RSI</label>
+        </div>
+    </div>
+
     <div id="signals-panel" class="container">
         <div id="sma-signal" class="signal hold">Cargando...</div>
         <div id="rsi-signal" class="signal hold">Cargando...</div>
@@ -288,22 +292,6 @@
         <div id="price-no-data" class="no-data-message" style="display:none;">No hay datos para mostrar el gráfico de precios.</div>
     </div>
     
-    <div id="rsi-chart-container" class="chart-container container">
-        <canvas id="rsiChart"></canvas>
-        <div class="rsi-explanation">
-            <strong>RSI (Índice de Fuerza Relativa):</strong>
-            <br>
-            Mide la velocidad y cambio de los movimientos de precios.
-            <br>
-            <ul>
-                <li>Valores sobre 70 indican <strong>sobrecompra</strong> (posible reversión a la baja).</li>
-                <li>Valores bajo 30 indican <strong>sobreventa</strong> (posible reversión al alza).</li>
-            </ul>
-            Es un oscilador de momentum.
-        </div>
-        <div id="rsi-no-data" class="no-data-message" style="display:none;">No hay datos para mostrar el gráfico de RSI.</div>
-    </div>
-
     <script>
         // ===================================================================================
         // --- CONFIGURACIÓN E INICIALIZACIÓN ---
@@ -336,28 +324,100 @@
         const holdList = document.getElementById('hold-list');
 
         const priceChartCanvas = document.getElementById('priceChart');
-        const rsiChartCanvas = document.getElementById('rsiChart');
+        // const rsiChartCanvas = document.getElementById('rsiChart'); // Ya no se necesita un canvas separado para RSI
         const priceNoDataMessage = document.getElementById('price-no-data');
-        const rsiNoDataMessage = document.getElementById('rsi-no-data');
+        // const rsiNoDataMessage = document.getElementById('rsi-no-data'); // Ya no se necesita un mensaje separado para RSI
 
-        let priceChartInstance, rsiChartInstance, countdownInterval;
+        // Referencias a los checkboxes de indicadores
+        const toggleSmaShort = document.getElementById('toggle-sma-short');
+        const toggleSmaLong = document.getElementById('toggle-sma-long');
+        const toggleBbUpper = document.getElementById('toggle-bb-upper');
+        const toggleBbMiddle = document.getElementById('toggle-bb-middle');
+        const toggleBbLower = document.getElementById('toggle-bb-lower');
+        const toggleRsi = document.getElementById('toggle-rsi');
+
+
+        let priceChartInstance, countdownInterval;
         let isProcessingAllCryptos = false;
 
         let allCryptos = []; // Almacenará los símbolos de todas las criptomonedas del select
 
+        // Guarda los datos de precio y los indicadores calculados para la cripto actual
+        let currentPriceDataCache = null;
+        let currentSmaShortCache = null;
+        let currentSmaLongCache = null;
+        let currentBollingerBandsCache = null;
+        let currentRsiCache = null;
+
         // ===================================================================================
-        // --- LÓGICA PRINCIPAL ---
+        // --- INICIALIZACIÓN DE LA APLICACIÓN ---
         // ===================================================================================
 
         /**
-         * Función principal que se ejecuta para obtener datos y analizar la crypto seleccionada.
-         * Actualiza los gráficos y el panel de señales individuales.
+         * Inicializa la lista de criptomonedas del selector cargándolas desde la API de Bybit.
+         */
+        async function initCryptoList() {
+            console.log("Cargando lista de criptomonedas desde Bybit...");
+            const url = `https://api.bybit.com/v5/market/instruments-info?category=${BYBIT_CATEGORY}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Error al cargar la lista de instrumentos: ${response.status} - ${response.statusText}`);
+                }
+                const data = await response.json();
+                if (!data || !data.result || !data.result.list || data.result.list.length === 0) {
+                    throw new Error("La API no devolvió una lista de instrumentos válida.");
+                }
+
+                allCryptos = []; // Vaciar la lista actual
+                coinSelect.innerHTML = ''; // Vaciar el select
+
+                // Filtrar solo pares USDT (ej: BTCUSDT) y ETH (ej: ETHUSDT), etc.
+                // Y stablecoins
+                const usdtPairs = data.result.list
+                    .filter(item => item.quoteCoin === 'USDT' || item.quoteCoin === 'USDC' || item.quoteCoin === 'DAI' || item.quoteCoin === 'BUSD') // Aseguramos que la moneda base sea USDT
+                    .map(item => item.symbol)
+                    .sort(); // Ordenar alfabéticamente
+
+                usdtPairs.forEach(symbol => {
+                    const option = document.createElement('option');
+                    option.value = symbol;
+                    option.textContent = symbol.replace('USDT', '/USDT').replace('USDC', '/USDC').replace('BUSD', '/BUSD').replace('DAI', '/DAI');
+                    coinSelect.appendChild(option);
+                    allCryptos.push(symbol); // Rellenar la lista global
+                });
+
+                if (allCryptos.length > 0) {
+                    coinSelect.value = "BTCUSDT"; // Seleccionar Bitcoin por defecto si existe
+                    // Si BTCUSDT no está en la lista (por alguna razón del filtro), selecciona la primera
+                    if (!allCryptos.includes("BTCUSDT")) {
+                        coinSelect.value = allCryptos[0];
+                    }
+                    console.log(`Lista de criptomonedas cargada. Total: ${allCryptos.length}`);
+                } else {
+                    coinSelect.innerHTML = '<option value="">No se encontraron criptomonedas USDT/USDC/DAI/BUSD.</option>';
+                    console.warn("No se encontraron criptomonedas USDT/USDC/DAI/BUSD en la API.");
+                }
+
+            } catch (error) {
+                console.error("Error al cargar la lista de criptomonedas:", error);
+                coinSelect.innerHTML = '<option value="">Error al cargar criptomonedas</option>';
+            }
+        }
+
+
+        // ===================================================================================
+        // --- LÓGICA PRINCIPAL DE ANÁLISIS ---
+        // ===================================================================================
+
+        /**
+         * Función que se ejecuta al cargar la página o al cambiar la crypto seleccionada.
+         * Se enfoca en actualizar los gráficos y señales individuales de la crypto seleccionada.
          */
         async function runSelectedCryptoAnalysis() {
             console.log("Iniciando análisis para la criptomoneda seleccionada...");
             if (countdownInterval) clearInterval(countdownInterval);
 
-            // Resetear mensajes y estados visuales del panel de señales
             smaSignalDiv.textContent = 'Cargando...';
             rsiSignalDiv.textContent = 'Cargando...';
             bbSignalDiv.textContent = 'Cargando...';
@@ -367,11 +427,18 @@
             updateTimerDiv.textContent = "";
 
             priceNoDataMessage.style.display = 'none';
-            rsiNoDataMessage.style.display = 'none';
+            // rsiNoDataMessage.style.display = 'none'; // Ya no es necesario
             priceChartCanvas.style.display = 'block';
-            rsiChartCanvas.style.display = 'block';
+            // rsiChartCanvas.style.display = 'block'; // Ya no es necesario
 
             const selectedSymbol = coinSelect.value;
+            if (!selectedSymbol) {
+                console.warn("No hay criptomoneda seleccionada para el análisis detallado.");
+                // Limpiar o mostrar mensaje en gráficos si no hay selección
+                if (priceChartInstance) priceChartInstance.destroy();
+                priceNoDataMessage.style.display = 'flex';
+                return;
+            }
             console.log(`Obteniendo datos de Bybit para: ${selectedSymbol}`);
 
             const prices = await getCryptoData(selectedSymbol, BYBIT_INTERVAL, BYBIT_CATEGORY, BYBIT_LIMIT);
@@ -385,31 +452,27 @@
                 updateTimerDiv.textContent = "Datos insuficientes para indicadores";
                 
                 if (priceChartInstance) priceChartInstance.destroy();
-                if (rsiChartInstance) rsiChartInstance.destroy();
                 priceChartCanvas.style.display = 'none';
-                rsiChartCanvas.style.display = 'none';
                 priceNoDataMessage.style.display = 'flex';
-                rsiNoDataMessage.style.display = 'flex';
                 return;
             }
 
             console.log(`Datos recibidos para ${selectedSymbol}. Número de puntos: ${prices.length}`);
 
-            const priceData = prices; 
+            currentPriceDataCache = prices; 
             const closingPrices = prices.map(p => p.y);
 
             console.log("Calculando indicadores para la cripto seleccionada...");
-            const smaShort = calculateSMA(closingPrices, SMA_SHORT_PERIOD);
-            const smaLong = calculateSMA(closingPrices, SMA_LONG_PERIOD);
-            const bollingerBands = calculateBollingerBands(closingPrices, BB_PERIOD, BB_STD_DEV);
-            const rsi = calculateRSI(closingPrices, RSI_PERIOD);
+            currentSmaShortCache = calculateSMA(closingPrices, SMA_SHORT_PERIOD);
+            currentSmaLongCache = calculateSMA(closingPrices, SMA_LONG_PERIOD);
+            currentBollingerBandsCache = calculateBollingerBands(closingPrices, BB_PERIOD, BB_STD_DEV);
+            currentRsiCache = calculateRSI(closingPrices, RSI_PERIOD);
             
             console.log("Renderizando gráficos para la cripto seleccionada...");
-            renderPriceChart(priceData, smaShort, smaLong, bollingerBands);
-            renderRsiChart(priceData, rsi);
+            renderPriceChart(currentPriceDataCache, currentSmaShortCache, currentSmaLongCache, currentBollingerBandsCache, currentRsiCache);
             
             console.log("Actualizando señales individuales...");
-            updateSignals(smaShort, smaLong, rsi, bollingerBands);
+            updateSignals(currentSmaShortCache, currentSmaLongCache, currentRsiCache, currentBollingerBandsCache, closingPrices);
 
             startUpdateTimer(UPDATE_INTERVAL_SELECTED_CRYPTO / 1000);
             console.log("Análisis de criptomoneda seleccionada completado.");
@@ -427,13 +490,10 @@
             isProcessingAllCryptos = true;
             console.log("Iniciando análisis para TODAS las criptomonedas (carga progresiva)...");
 
-            // Preparar las listas con mensajes de "Cargando..."
-            buyList.innerHTML = '<li>Cargando...</li>';
-            sellList.innerHTML = '<li>Cargando...</li>';
-            holdList.innerHTML = '<li>Cargando...</li>';
+            const tempRecommendations = { buy: [], sell: [], hold: [], error: [] }; // Temporal para construir las listas
 
-            // Mapa para almacenar las recomendaciones a medida que se procesan
-            const currentRecommendations = { buy: [], sell: [], hold: [], error: [] };
+            // Asegurarse de que las listas tengan un mensaje inicial
+            renderOpportunityColumns(tempRecommendations); 
 
             for (let i = 0; i < allCryptos.length; i++) {
                 const symbol = allCryptos[i];
@@ -445,7 +505,7 @@
                     const minRequiredData = Math.max(SMA_LONG_PERIOD, BB_PERIOD, RSI_PERIOD);
                     if (!prices || prices.length < minRequiredData) {
                         console.warn(`[Todas las Cryptos] Datos insuficientes para ${symbol}.`);
-                        currentRecommendations.hold.push(`${symbol} (Datos Insuficientes)`);
+                        tempRecommendations.hold.push(`${symbol} (Datos Insuficientes)`);
                     } else {
                         const closingPrices = prices.map(p => p.y);
                         const smaShort = calculateSMA(closingPrices, SMA_SHORT_PERIOD);
@@ -453,27 +513,24 @@
                         const bollingerBands = calculateBollingerBands(closingPrices, BB_PERIOD, BB_STD_DEV);
                         const rsi = calculateRSI(closingPrices, RSI_PERIOD);
 
-                        // getCombinedSignals necesita `closingPrices` para las BB
                         const signals = getCombinedSignals(smaShort, smaLong, rsi, bollingerBands, closingPrices);
                         
                         if (signals.overall === 'buy') {
-                            currentRecommendations.buy.push(symbol);
+                            tempRecommendations.buy.push(symbol);
                         } else if (signals.overall === 'sell') {
-                            currentRecommendations.sell.push(symbol);
+                            tempRecommendations.sell.push(symbol);
                         } else {
-                            currentRecommendations.hold.push(symbol);
+                            tempRecommendations.hold.push(symbol);
                         }
                     }
 
                 } catch (error) {
                     console.error(`[Todas las Cryptos] Error al procesar ${symbol}:`, error);
-                    currentRecommendations.error.push(`${symbol} (Error)`); // Nueva categoría para errores
-                    // Si prefieres, podrías ponerlos en 'hold' en lugar de 'error'
-                    // currentRecommendations.hold.push(`${symbol} (Error)`);
+                    tempRecommendations.error.push(`${symbol} (Error)`);
                 }
 
                 // --- ACTUALIZAR EL DOM DESPUÉS DE CADA CRYPTO ---
-                renderOpportunityColumns(currentRecommendations);
+                renderOpportunityColumns(tempRecommendations);
 
                 // Pequeño retraso para evitar golpear los límites de tasa de la API de Bybit
                 if (i < allCryptos.length - 1) {
@@ -486,7 +543,6 @@
 
 
         // Función auxiliar para obtener la recomendación combinada
-        // Se le pasa `closingPrices` para que pueda obtener el último precio para BB.
         function getCombinedSignals(smaShort, smaLong, rsi, bollingerBands, closingPrices) {
             let smaRec = 'hold';
             let rsiRec = 'hold';
@@ -543,16 +599,13 @@
         }
 
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Recoger todas las criptomonedas del select al cargar el DOM
-            for (let i = 0; i < coinSelect.options.length; i++) {
-                allCryptos.push(coinSelect.options[i].value);
-            }
-            console.log("Criptomonedas detectadas:", allCryptos);
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 1. Inicializar la lista de criptomonedas del select
+            await initCryptoList();
 
-            // Iniciar el análisis de la criptomoneda seleccionada para los gráficos
+            // 2. Iniciar el análisis de la criptomoneda seleccionada para los gráficos
             runSelectedCryptoAnalysis();
-            // Iniciar la actualización de todas las oportunidades al cargar
+            // 3. Iniciar la actualización de todas las oportunidades (con carga progresiva)
             updateAllCryptosOpportunities();
 
             // Intervalo para la actualización de la criptomoneda seleccionada (gráficos)
@@ -561,24 +614,29 @@
             setInterval(updateAllCryptosOpportunities, UPDATE_INTERVAL_ALL_CRYPTOS); 
         });
 
+        // Cuando el usuario cambia la cripto en el select, actualizamos solo el gráfico y las señales individuales
         coinSelect.addEventListener('change', runSelectedCryptoAnalysis);
-
 
         // ===================================================================================
         // --- FUNCIONES DE OBTENCIÓN Y CÁLCULO ---
         // ===================================================================================
 
+        /**
+         * Obtiene datos de klines (velas) para un símbolo específico de Bybit.
+         * @param {string} symbol - El par de trading (ej. "BTCUSDT").
+         * @param {string} interval - El intervalo de tiempo para las velas (ej. "60" para 1 hora).
+         * @param {string} category - La categoría del instrumento (ej. "spot").
+         * @param {number} limit - El número máximo de velas a obtener.
+         * @returns {Array<object>} Un array de objetos { x: timestamp, y: price } o null si hay un error.
+         */
         async function getCryptoData(symbol, interval = "60", category = "spot", limit = 200) {
             const url = `https://api.bybit.com/v5/market/kline?category=${category}&symbol=${symbol}&interval=${interval}&limit=${limit}`;
 
             try {
-                // console.log(`Haciendo fetch a Bybit para ${symbol}: ${url}`); // Descomentar para depuración detallada
                 const response = await fetch(url);
-                
                 if (!response.ok) {
                     const errorDetails = await response.text();
-                    const errorMessage = `Error de red de Bybit para ${symbol}: ${response.status} - ${response.statusText}. Detalles: ${errorDetails.substring(0, Math.min(errorDetails.length, 200))}...`;
-                    throw new Error(errorMessage);
+                    throw new Error(`Error de red de Bybit para ${symbol}: ${response.status} - ${response.statusText}. Detalles: ${errorDetails.substring(0, Math.min(errorDetails.length, 200))}...`);
                 }
                 
                 const data = await response.json();
@@ -588,16 +646,16 @@
                 }
                 
                 const formattedPrices = data.result.list.map(kline => ({
-                    x: parseInt(kline[0]),
-                    y: parseFloat(kline[4])
+                    x: parseInt(kline[0]), // Timestamp en milisegundos
+                    y: parseFloat(kline[4]) // Precio de cierre (close)
                 }));
 
                 return formattedPrices.reverse(); 
 
             } catch (error) {
-                console.error(`Error al obtener datos de la API de Bybit para ${symbol} en getCryptoData:`, error);
-                // Si hay un error general en la API, se mostrará en el timer para la crypto seleccionada
-                // Para el listado de todas las cryptos, se manejará en `updateAllCryptosOpportunities`
+                console.error(`Error al obtener datos de la API de Bybit para ${symbol}:`, error);
+                // Cuando esto ocurre para la crypto seleccionada, runSelectedCryptoAnalysis lo maneja
+                // Cuando ocurre para updateAllCryptosOpportunities, lo captura y añade a la lista de errores/hold
                 return null;
             }
         }
@@ -687,44 +745,120 @@
         }
 
         // ===================================================================================
-        // --- FUNCIONES DE RENDERIZADO Y ACTUALIZACIÓN DE PANELES ---
+        // --- FUNCIONES DE RENDERIZADO DE GRÁFICOS ---
         // ===================================================================================
 
-        function renderPriceChart(priceData, smaShort, smaLong, bb) {
+        /**
+         * Dibuja o actualiza el gráfico principal de precios, y los indicadores seleccionados.
+         * Se le pasa el precio y todos los indicadores calculados, y solo dibuja los que estén chequeados.
+         * @param {Array<object>} priceData - Datos de precio en formato { x: timestamp, y: price }.
+         * @param {Array<object|null>} smaShort - Datos de la SMA corta.
+         * @param {Array<object|null>} smaLong - Datos de la SMA larga.
+         * @param {object} bb - Objeto con datos de Bandas de Bollinger (upper, middle, lower).
+         * @param {Array<object|null>} rsi - Datos del RSI.
+         */
+        function renderPriceChart(priceData, smaShort, smaLong, bb, rsi) {
             if (priceChartInstance) priceChartInstance.destroy();
 
             const ctx = priceChartCanvas.getContext('2d');
+            const datasets = [
+                { 
+                    label: 'Precio (USD)', 
+                    data: priceData, 
+                    borderColor: '#36a2eb', 
+                    borderWidth: 2.5, 
+                    pointRadius: 0, 
+                    tension: 0.1, 
+                    fill: false,
+                    yAxisID: 'y-price' // Eje Y para el precio
+                }
+            ];
+
+            // Añadir datasets de indicadores si están seleccionados
+            if (toggleSmaShort.checked) {
+                datasets.push({ 
+                    label: `SMA ${SMA_SHORT_PERIOD}`, 
+                    data: smaShort.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), 
+                    borderColor: '#ffce56', 
+                    borderWidth: 1.5, 
+                    pointRadius: 0, 
+                    fill: false,
+                    yAxisID: 'y-price' // SMA en el mismo eje que el precio
+                });
+            }
+            if (toggleSmaLong.checked) {
+                datasets.push({ 
+                    label: `SMA ${SMA_LONG_PERIOD}`, 
+                    data: smaLong.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), 
+                    borderColor: '#ff6384', 
+                    borderWidth: 1.5, 
+                    pointRadius: 0, 
+                    fill: false,
+                    yAxisID: 'y-price' // SMA en el mismo eje que el precio
+                });
+            }
+            
+            if (toggleBbUpper.checked) {
+                datasets.push({ 
+                    label: `BB Superior`, 
+                    data: bb.upper.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), 
+                    borderColor: 'rgba(153, 102, 255, 0.5)', 
+                    borderWidth: 1, 
+                    pointRadius: 0, 
+                    fill: false,
+                    yAxisID: 'y-price' // BB en el mismo eje que el precio
+                });
+            }
+            if (toggleBbLower.checked) {
+                datasets.push({ 
+                    label: `BB Inferior`, 
+                    data: bb.lower.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), 
+                    borderColor: 'rgba(153, 102, 255, 0.5)', 
+                    borderWidth: 1, 
+                    pointRadius: 0, 
+                    fill: '-1',
+                    backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                    hidden: false,
+                    yAxisID: 'y-price' // BB en el mismo eje que el precio
+                });
+            }
+            if (toggleBbMiddle.checked) {
+                datasets.push({ 
+                    label: `BB Media`, 
+                    data: bb.middle.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), 
+                    borderColor: 'rgba(153, 102, 255, 0.8)', 
+                    borderWidth: 1.5, 
+                    pointRadius: 0, 
+                    borderDash: [5, 5], 
+                    fill: false,
+                    yAxisID: 'y-price' // BB en el mismo eje que el precio
+                });
+            }
+
+            if (toggleRsi.checked) {
+                datasets.push({
+                    label: `RSI (${RSI_PERIOD})`,
+                    data: rsi.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null),
+                    borderColor: '#4bc0c0', // Color típico para RSI
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    fill: false,
+                    yAxisID: 'y-rsi' // **NUEVO EJE Y para RSI**
+                });
+            }
+
             priceChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    datasets: [
-                        { label: 'Precio (USD)', data: priceData, borderColor: '#36a2eb', borderWidth: 2.5, pointRadius: 0, tension: 0.1, fill: false },
-                        { label: `SMA ${SMA_SHORT_PERIOD}`, data: smaShort.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), borderColor: '#ffce56', borderWidth: 1.5, pointRadius: 0, fill: false },
-                        { label: `SMA ${SMA_LONG_PERIOD}`, data: smaLong.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), borderColor: '#ff6384', borderWidth: 1.5, pointRadius: 0, fill: false },
-                        { 
-                            label: `BB Superior`, 
-                            data: bb.upper.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), 
-                            borderColor: 'rgba(153, 102, 255, 0.5)', 
-                            borderWidth: 1, 
-                            pointRadius: 0, 
-                            fill: false
-                        },
-                        { 
-                            label: `BB Inferior`, 
-                            data: bb.lower.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), 
-                            borderColor: 'rgba(153, 102, 255, 0.5)', 
-                            borderWidth: 1, 
-                            pointRadius: 0, 
-                            fill: '-1',
-                            backgroundColor: 'rgba(153, 102, 255, 0.1)',
-                            hidden: false
-                        },
-                        { label: `BB Media`, data: bb.middle.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), borderColor: 'rgba(153, 102, 255, 0.8)', borderWidth: 1.5, pointRadius: 0, borderDash: [5, 5], fill: false }
-                    ]
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
                     scales: {
                         x: { 
                             type: 'time', 
@@ -740,51 +874,23 @@
                             ticks: { color: '#e0e0e0' },
                             grid: { color: '#333' }
                         },
-                        y: { 
+                        'y-price': { // Definición del eje Y para el precio
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
                             title: { display: true, text: 'Precio (USD)', color: '#e0e0e0' },
                             ticks: { color: '#e0e0e0' },
                             grid: { color: '#333' }
-                        }
-                    },
-                    plugins: {
-                        tooltip: { mode: 'index', intersect: false },
-                        legend: { labels: { color: '#e0e0e0' } }
-                    }
-                }
-            });
-            console.log("Gráfico de precios renderizado.");
-        }
-
-        function renderRsiChart(priceData, rsi) {
-            if (rsiChartInstance) rsiChartInstance.destroy();
-            const ctx = rsiChartCanvas.getContext('2d');
-            rsiChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    datasets: [{
-                        label: `RSI (${RSI_PERIOD})`,
-                        data: rsi.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null),
-                        borderColor: '#4bc0c0',
-                        borderWidth: 1.5,
-                        pointRadius: 0,
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { 
-                            type: 'time', 
-                            time: { unit: 'hour', display: false },
-                            grid: { color: '#333' }
                         },
-                        y: { 
-                            min: 0, 
+                        'y-rsi': { // Definición del eje Y para el RSI
+                            type: 'linear',
+                            display: toggleRsi.checked, // Mostrar solo si RSI está seleccionado
+                            position: 'right',
+                            min: 0,
                             max: 100,
-                            title: { display: true, text: 'RSI', color: '#e0e0e0' },
-                            ticks: { color: '#e0e0e0' },
-                            grid: { color: '#333' }
+                            title: { display: true, text: 'RSI', color: '#4bc0c0' }, // Color del título del eje RSI
+                            ticks: { color: '#4bc0c0' },
+                            grid: { drawOnChartArea: false } // No dibujar cuadrícula para este eje para no saturar
                         }
                     },
                     plugins: {
@@ -792,155 +898,55 @@
                         legend: { labels: { color: '#e0e0e0' } },
                         annotation: {
                             annotations: {
-                                overbought: { 
+                                rsiOverboughtLine: { 
                                     type: 'line', 
                                     yMin: RSI_OVERBOUGHT, 
                                     yMax: RSI_OVERBOUGHT, 
                                     borderColor: 'red', 
                                     borderWidth: 1, 
                                     borderDash: [5, 5], 
-                                    label: { content: 'Sobrecompra', enabled: true, position: 'start', color: '#e0e0e0', backgroundColor: 'rgba(255, 0, 0, 0.5)'} 
+                                    yAxisID: 'y-rsi', // Asociar al eje RSI
+                                    label: { 
+                                        content: 'Sobrecompra', enabled: toggleRsi.checked, position: 'start', 
+                                        color: '#e0e0e0', backgroundColor: 'rgba(255, 0, 0, 0.5)'
+                                    } 
                                 },
-                                oversold: { 
+                                rsiOversoldLine: { 
                                     type: 'line', 
                                     yMin: RSI_OVERSOLD, 
                                     yMax: RSI_OVERSOLD, 
                                     borderColor: 'green', 
                                     borderWidth: 1, 
                                     borderDash: [5, 5], 
-                                    label: { content: 'Sobreventa', enabled: true, position: 'start', color: '#e0e0e0', backgroundColor: 'rgba(0, 128, 0, 0.5)'} 
+                                    yAxisID: 'y-rsi', // Asociar al eje RSI
+                                    label: { 
+                                        content: 'Sobreventa', enabled: toggleRsi.checked, position: 'start', 
+                                        color: '#e0e0e0', backgroundColor: 'rgba(0, 128, 0, 0.5)'
+                                    } 
                                 }
                             }
                         }
                     }
                 }
             });
-            console.log("Gráfico RSI renderizado.");
+            console.log("Gráfico de precios con indicadores renderizado.");
         }
-        
-        function updateSignals(smaShort, smaLong, rsi, bollingerBands) {
-            smaSignalDiv.classList.remove('alert-buy', 'alert-sell');
-            rsiSignalDiv.classList.remove('alert-buy', 'alert-sell');
-            bbSignalDiv.classList.remove('alert-buy', 'alert-sell');
 
-            let smaRec = 'hold';
-            let rsiRec = 'hold';
-            let bbRec = 'hold';
 
-            const validSmaShort = smaShort.filter(v => v !== null);
-            const validSmaLong = smaLong.filter(v => v !== null);
+        // ===================================================================================
+        // --- Manejo de Eventos de Interfaz ---
+        // ===================================================================================
 
-            if (validSmaShort.length >= 2 && validSmaLong.length >= 2) {
-                const lastSmaShort = validSmaShort[validSmaShort.length - 1].y;
-                const prevSmaShort = validSmaShort[validSmaShort.length - 2].y;
-                const lastSmaLong = validSmaLong[validSmaLong.length - 1].y;
-                const prevSmaLong = validSmaLong[validSmaLong.length - 2].y;
-
-                if (prevSmaShort <= prevSmaLong && lastSmaShort > lastSmaLong) {
-                    smaSignalDiv.textContent = 'Cruce SMA: COMPRA 📈 (Corto > Largo)';
-                    smaSignalDiv.className = 'signal buy alert-buy';
-                } else if (prevSmaShort >= prevSmaLong && lastSmaShort < lastSmaLong) {
-                    smaSignalDiv.textContent = 'Cruce SMA: VENTA 📉 (Corto < Largo)';
-                    smaSignalDiv.className = 'signal sell alert-sell';
-                } else {
-                    smaSignalDiv.textContent = 'Cruce SMA: Mantener 😐';
-                    smaSignalDiv.className = 'signal hold';
+        // Listener para los checkboxes de indicadores.
+        const indicatorCheckboxes = document.querySelectorAll('#indicator-selection-panel input[type="checkbox"]');
+        indicatorCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                // Volver a renderizar el gráfico con los datos en caché
+                if (currentPriceDataCache) {
+                    renderPriceChart(currentPriceDataCache, currentSmaShortCache, currentSmaLongCache, currentBollingerBandsCache, currentRsiCache);
                 }
-            } else {
-                smaSignalDiv.textContent = 'Cruce SMA: Datos insuficientes';
-                smaSignalDiv.className = 'signal hold';
-            }
-
-            const validRsi = rsi.filter(v => v !== null);
-            if (validRsi.length > 0) {
-                const lastRsi = validRsi[validRsi.length - 1].y;
-                if (lastRsi > RSI_OVERBOUGHT) {
-                    rsiSignalDiv.textContent = `RSI (${lastRsi.toFixed(1)}): Sobrecompra ⚠️`;
-                    rsiSignalDiv.className = 'signal overbought alert-sell';
-                } else if (lastRsi < RSI_OVERSOLD) {
-                    rsiSignalDiv.textContent = `RSI (${lastRsi.toFixed(1)}): Sobreventa ✅`;
-                    rsiSignalDiv.className = 'signal oversold alert-buy';
-                } else {
-                    rsiSignalDiv.textContent = `RSI (${lastRsi.toFixed(1)}): Neutral ⚖️`;
-                    rsiSignalDiv.className = 'signal hold';
-                }
-            } else {
-                rsiSignalDiv.textContent = 'RSI: Datos insuficientes';
-                rsiSignalDiv.className = 'signal hold';
-            }
-
-            const validBbUpper = bollingerBands.upper.filter(v => v !== null);
-            const validBbLower = bollingerBands.lower.filter(v => v !== null);
-            const currentPriceData = priceChartInstance?.data?.datasets[0]?.data.filter(v => v !== null);
-
-            if (validBbUpper.length > 0 && validBbLower.length > 0 && currentPriceData && currentPriceData.length > 0) {
-                const lastPrice = currentPriceData[currentPriceData.length - 1].y;
-                const lastBbUpper = validBbUpper[validBbUpper.length - 1].y;
-                const lastBbLower = validBbLower[validBbLower.length - 1].y;
-                
-                if (lastPrice > lastBbUpper) {
-                    bbSignalDiv.textContent = `BB: Precio sobre banda superior ⬆️ (Venta)`;
-                    bbSignalDiv.className = 'signal sell alert-sell';
-                } else if (lastPrice < lastBbLower) {
-                    bbSignalDiv.textContent = `BB: Precio bajo banda inferior ⬇️ (Compra)`;
-                    bbSignalDiv.className = 'signal buy alert-buy';
-                } else {
-                    bbSignalDiv.textContent = 'BB: Precio dentro de la banda 🔄';
-                    bbSignalDiv.className = 'signal hold';
-                }
-            } else {
-                bbSignalDiv.textContent = 'BB: Datos insuficientes';
-                bbSignalDiv.className = 'signal hold';
-            }
-            console.log("Señales individuales actualizadas.");
-        }
-        
-        /**
-         * Función central para renderizar las 3 columnas de oportunidades en el DOM.
-         * Se llama repetidamente durante la carga progresiva.
-         * @param {object} recommendationsMap - Un objeto con arrays de símbolos para 'buy', 'sell', 'hold', 'error'.
-         */
-        function renderOpportunityColumns(recommendationsMap) {
-            buyList.innerHTML = '';
-            sellList.innerHTML = '';
-            holdList.innerHTML = '';
-
-            if (recommendationsMap.buy.length === 0 && recommendationsMap.error.length === 0 && recommendationsMap.hold.length === 0 && recommendationsMap.sell.length === 0) {
-                 // Si aún no hay datos, mostrar "Cargando..."
-                 buyList.innerHTML = '<li>Cargando...</li>';
-                 sellList.innerHTML = '<li>Cargando...</li>';
-                 holdList.innerHTML = '<li>Cargando...</li>';
-                 return;
-            }
-
-            // Ordenar alfabéticamente para una mejor visualización
-            recommendationsMap.buy.sort().forEach(symbol => {
-                const li = document.createElement('li');
-                li.textContent = symbol;
-                buyList.appendChild(li);
             });
-            if (recommendationsMap.buy.length === 0) buyList.innerHTML = '<li>Ninguna</li>';
-
-
-            recommendationsMap.sell.sort().forEach(symbol => {
-                const li = document.createElement('li');
-                li.textContent = symbol;
-                sellList.appendChild(li);
-            });
-            if (recommendationsMap.sell.length === 0) sellList.innerHTML = '<li>Ninguna</li>';
-
-
-            // Incluir errores o datos insuficientes en la columna de "Mantener"
-            const allHoldSymbols = [...recommendationsMap.hold, ...recommendationsMap.error];
-            allHoldSymbols.sort().forEach(symbol => {
-                const li = document.createElement('li');
-                li.textContent = symbol;
-                holdList.appendChild(li);
-            });
-            if (allHoldSymbols.length === 0) holdList.innerHTML = '<li>Ninguna</li>';
-
-            // console.log("Columnas de oportunidades actualizadas en el DOM."); // Descomentar para depuración
-        }
+        });
 
         function startUpdateTimer(seconds) {
             let remaining = seconds;
