@@ -20,10 +20,9 @@
             max-width: 1200px;
             margin-bottom: 20px;
         }
-        /* Contenedor principal para controles y oportunidades */
         .top-section-container {
             display: flex;
-            flex-wrap: wrap; /* Permite que los elementos se envuelvan */
+            flex-wrap: wrap;
             gap: 20px;
             width: 95%;
             max-width: 1200px;
@@ -37,8 +36,8 @@
             flex-direction: column;
             align-items: flex-start;
             gap: 10px;
-            flex: 1; /* Permite que el control crezca */
-            min-width: 280px; /* Ancho mínimo para el control */
+            flex: 1;
+            min-width: 280px;
         }
         #coin-select {
             padding: 8px;
@@ -47,7 +46,7 @@
             background-color: #333;
             color: #e0e0e0;
             font-size: 1em;
-            width: 100%; /* Ocupa todo el ancho disponible */
+            width: 100%;
         }
         #update-timer {
             font-size: 0.9em;
@@ -59,7 +58,7 @@
             gap: 15px;
             justify-content: center;
             flex-wrap: wrap;
-            margin-top: 20px; /* Ajuste para separar de los gráficos */
+            margin-top: 20px;
             width: 95%;
             max-width: 1200px;
         }
@@ -77,7 +76,6 @@
         .hold { background-color: #6c757d; color: white; }
         .overbought { background-color: #ffc107; color: #121212; }
         .oversold { background-color: #17a2b8; color: white; }
-        /* Estilos para las alertas visuales */
         .alert-buy {
             animation: pulse-buy 1s infinite alternate;
             border: 2px solid #28a745;
@@ -131,8 +129,8 @@
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            flex: 3; /* Ocupa más espacio */
-            min-width: 450px; /* Ancho mínimo */
+            flex: 3;
+            min-width: 450px;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -147,7 +145,7 @@
             display: flex;
             gap: 10px;
             flex-grow: 1;
-            min-height: 200px; /* Altura mínima para que las columnas sean visibles */
+            min-height: 200px;
         }
         .opportunity-column {
             background-color: #2a2a2a;
@@ -170,7 +168,7 @@
             padding: 0;
             margin: 0;
             width: 100%;
-            overflow-y: auto; /* Desplazamiento si hay muchas criptos */
+            overflow-y: auto;
             flex-grow: 1;
         }
         .opportunity-column li {
@@ -274,7 +272,7 @@
             </div>
             <p style="font-size: 0.8em; color: #888; margin-top: 10px; text-align: center;">
                 Recomendaciones basadas en análisis técnico (SMA, RSI, BB) para todas las criptomonedas listadas.
-                La actualización de esta sección puede tardar debido a los límites de la API.
+                La actualización de esta sección se realiza progresivamente.
             </p>
         </div>
     </div>
@@ -313,10 +311,11 @@
 
         const BYBIT_INTERVAL = "60"; 
         const BYBIT_CATEGORY = "spot";
-        const BYBIT_LIMIT = 200; // Número de velas (puntos de datos) a solicitar de Bybit. Máx 1000.
+        const BYBIT_LIMIT = 200;
 
-        const UPDATE_INTERVAL = 120000; // 2 minutos para actualizar la crypto seleccionada
-        const ALL_CRYPTOS_UPDATE_DELAY = 1500; // 1.5 segundos de retraso entre cada crypto para la API (PARA TODAS LAS CRYPTOS)
+        const UPDATE_INTERVAL_SELECTED_CRYPTO = 120000; // 2 minutos para actualizar la crypto seleccionada
+        const UPDATE_INTERVAL_ALL_CRYPTOS = 5 * 60 * 1000; // 5 minutos para actualizar TODAS las oportunidades
+        const ALL_CRYPTOS_API_DELAY = 1500; // 1.5 segundos de retraso entre cada crypto para la API
 
         const SMA_SHORT_PERIOD = 20;
         const SMA_LONG_PERIOD = 50;
@@ -342,10 +341,9 @@
         const rsiNoDataMessage = document.getElementById('rsi-no-data');
 
         let priceChartInstance, rsiChartInstance, countdownInterval;
-        let isProcessingAllCryptos = false; // Bandera para evitar ejecuciones simultáneas
+        let isProcessingAllCryptos = false;
 
-        // Lista global de todas las criptomonedas del select
-        let allCryptos = [];
+        let allCryptos = []; // Almacenará los símbolos de todas las criptomonedas del select
 
         // ===================================================================================
         // --- LÓGICA PRINCIPAL ---
@@ -353,6 +351,7 @@
 
         /**
          * Función principal que se ejecuta para obtener datos y analizar la crypto seleccionada.
+         * Actualiza los gráficos y el panel de señales individuales.
          */
         async function runSelectedCryptoAnalysis() {
             console.log("Iniciando análisis para la criptomoneda seleccionada...");
@@ -367,7 +366,6 @@
             bbSignalDiv.className = 'signal hold';
             updateTimerDiv.textContent = "";
 
-            // Ocultar mensajes de "no hay datos" y mostrar los canvas.
             priceNoDataMessage.style.display = 'none';
             rsiNoDataMessage.style.display = 'none';
             priceChartCanvas.style.display = 'block';
@@ -380,7 +378,7 @@
             
             const minRequiredData = Math.max(SMA_LONG_PERIOD, BB_PERIOD, RSI_PERIOD);
             if (!prices || prices.length < minRequiredData) {
-                console.error(`Datos insuficientes para calcular indicadores. Se necesitan al menos ${minRequiredData} puntos, se obtuvieron ${prices ? prices.length : 0}.`, prices);
+                console.error(`Datos insuficientes para calcular indicadores de ${selectedSymbol}. Se necesitan al menos ${minRequiredData} puntos, se obtuvieron ${prices ? prices.length : 0}.`, prices);
                 smaSignalDiv.textContent = 'Error: Datos insuficientes.';
                 rsiSignalDiv.textContent = 'Error: Datos insuficientes.';
                 bbSignalDiv.textContent = 'Error: Datos insuficientes.';
@@ -395,30 +393,31 @@
                 return;
             }
 
-            console.log(`Datos recibidos. Número de puntos: ${prices.length}`);
+            console.log(`Datos recibidos para ${selectedSymbol}. Número de puntos: ${prices.length}`);
 
             const priceData = prices; 
             const closingPrices = prices.map(p => p.y);
 
-            console.log("Calculando indicadores...");
+            console.log("Calculando indicadores para la cripto seleccionada...");
             const smaShort = calculateSMA(closingPrices, SMA_SHORT_PERIOD);
             const smaLong = calculateSMA(closingPrices, SMA_LONG_PERIOD);
             const bollingerBands = calculateBollingerBands(closingPrices, BB_PERIOD, BB_STD_DEV);
             const rsi = calculateRSI(closingPrices, RSI_PERIOD);
             
-            console.log("Renderizando gráficos...");
+            console.log("Renderizando gráficos para la cripto seleccionada...");
             renderPriceChart(priceData, smaShort, smaLong, bollingerBands);
             renderRsiChart(priceData, rsi);
             
             console.log("Actualizando señales individuales...");
             updateSignals(smaShort, smaLong, rsi, bollingerBands);
 
-            startUpdateTimer(UPDATE_INTERVAL / 1000);
+            startUpdateTimer(UPDATE_INTERVAL_SELECTED_CRYPTO / 1000);
             console.log("Análisis de criptomoneda seleccionada completado.");
         }
 
         /**
          * Función para actualizar el tablero de oportunidades con TODAS las criptomonedas.
+         * Realiza una carga progresiva y actualiza el DOM después de cada crypto.
          */
         async function updateAllCryptosOpportunities() {
             if (isProcessingAllCryptos) {
@@ -426,72 +425,69 @@
                 return;
             }
             isProcessingAllCryptos = true;
-            console.log("Iniciando análisis para TODAS las criptomonedas...");
+            console.log("Iniciando análisis para TODAS las criptomonedas (carga progresiva)...");
 
-            // Limpiar las listas antes de empezar a poblar
+            // Preparar las listas con mensajes de "Cargando..."
             buyList.innerHTML = '<li>Cargando...</li>';
             sellList.innerHTML = '<li>Cargando...</li>';
             holdList.innerHTML = '<li>Cargando...</li>';
 
-            // Almacena las recomendaciones para cada categoría
-            const currentRecommendations = { buy: [], sell: [], hold: [] };
+            // Mapa para almacenar las recomendaciones a medida que se procesan
+            const currentRecommendations = { buy: [], sell: [], hold: [], error: [] };
 
             for (let i = 0; i < allCryptos.length; i++) {
                 const symbol = allCryptos[i];
-                console.log(`Procesando oportunidad para: ${symbol} (${i + 1}/${allCryptos.length})`);
+                // console.log(`Procesando oportunidad para: ${symbol} (${i + 1}/${allCryptos.length})`); // Descomentar para depuración granular
 
                 try {
                     const prices = await getCryptoData(symbol, BYBIT_INTERVAL, BYBIT_CATEGORY, BYBIT_LIMIT);
 
                     const minRequiredData = Math.max(SMA_LONG_PERIOD, BB_PERIOD, RSI_PERIOD);
                     if (!prices || prices.length < minRequiredData) {
-                        console.warn(`Datos insuficientes para ${symbol}. Saltando.`);
+                        console.warn(`[Todas las Cryptos] Datos insuficientes para ${symbol}.`);
                         currentRecommendations.hold.push(`${symbol} (Datos Insuficientes)`);
-                        // No es ideal pero evita errores en el tablero.
-                        // Podríamos ponerlos en una sección de "Errores/Datos Insuficientes" si quisiéramos.
-                        continue; 
-                    }
-
-                    const closingPrices = prices.map(p => p.y);
-
-                    const smaShort = calculateSMA(closingPrices, SMA_SHORT_PERIOD);
-                    const smaLong = calculateSMA(closingPrices, SMA_LONG_PERIOD);
-                    const bollingerBands = calculateBollingerBands(closingPrices, BB_PERIOD, BB_STD_DEV);
-                    const rsi = calculateRSI(closingPrices, RSI_PERIOD);
-
-                    const signals = getCombinedSignals(smaShort, smaLong, rsi, bollingerBands); // Obtener la recomendación general
-                    
-                    if (signals.overall === 'buy') {
-                        currentRecommendations.buy.push(symbol);
-                    } else if (signals.overall === 'sell') {
-                        currentRecommendations.sell.push(symbol);
                     } else {
-                        currentRecommendations.hold.push(symbol);
+                        const closingPrices = prices.map(p => p.y);
+                        const smaShort = calculateSMA(closingPrices, SMA_SHORT_PERIOD);
+                        const smaLong = calculateSMA(closingPrices, SMA_LONG_PERIOD);
+                        const bollingerBands = calculateBollingerBands(closingPrices, BB_PERIOD, BB_STD_DEV);
+                        const rsi = calculateRSI(closingPrices, RSI_PERIOD);
+
+                        // getCombinedSignals necesita `closingPrices` para las BB
+                        const signals = getCombinedSignals(smaShort, smaLong, rsi, bollingerBands, closingPrices);
+                        
+                        if (signals.overall === 'buy') {
+                            currentRecommendations.buy.push(symbol);
+                        } else if (signals.overall === 'sell') {
+                            currentRecommendations.sell.push(symbol);
+                        } else {
+                            currentRecommendations.hold.push(symbol);
+                        }
                     }
 
                 } catch (error) {
-                    console.error(`Error al procesar ${symbol}:`, error);
-                    currentRecommendations.hold.push(`${symbol} (Error)`); // Marcar con error
+                    console.error(`[Todas las Cryptos] Error al procesar ${symbol}:`, error);
+                    currentRecommendations.error.push(`${symbol} (Error)`); // Nueva categoría para errores
+                    // Si prefieres, podrías ponerlos en 'hold' en lugar de 'error'
+                    // currentRecommendations.hold.push(`${symbol} (Error)`);
                 }
+
+                // --- ACTUALIZAR EL DOM DESPUÉS DE CADA CRYPTO ---
+                renderOpportunityColumns(currentRecommendations);
 
                 // Pequeño retraso para evitar golpear los límites de tasa de la API de Bybit
                 if (i < allCryptos.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, ALL_CRYPTOS_UPDATE_DELAY));
+                    await new Promise(resolve => setTimeout(resolve, ALL_CRYPTOS_API_DELAY));
                 }
             }
-
-            // Una vez que se han procesado todas, actualiza las listas
-            buyList.innerHTML = currentRecommendations.buy.length > 0 ? currentRecommendations.buy.map(s => `<li>${s}</li>`).join('') : '<li>Ninguna</li>';
-            sellList.innerHTML = currentRecommendations.sell.length > 0 ? currentRecommendations.sell.map(s => `<li>${s}</li>`).join('') : '<li>Ninguna</li>';
-            holdList.innerHTML = currentRecommendations.hold.length > 0 ? currentRecommendations.hold.map(s => `<li>${s}</li>`).join('') : '<li>Ninguna</li>';
-
             isProcessingAllCryptos = false;
             console.log("Análisis de TODAS las criptomonedas completado.");
         }
 
 
         // Función auxiliar para obtener la recomendación combinada
-        function getCombinedSignals(smaShort, smaLong, rsi, bollingerBands) {
+        // Se le pasa `closingPrices` para que pueda obtener el último precio para BB.
+        function getCombinedSignals(smaShort, smaLong, rsi, bollingerBands, closingPrices) {
             let smaRec = 'hold';
             let rsiRec = 'hold';
             let bbRec = 'hold';
@@ -519,9 +515,7 @@
             // --- BB ---
             const validBbUpper = bollingerBands.upper.filter(v => v !== null);
             const validBbLower = bollingerBands.lower.filter(v => v !== null);
-            // Para la recomendación general, no necesitamos el priceChartInstance.data
-            // Solo necesitamos el último precio de cierre de la lista 'prices' (closingPrices)
-            const lastPrice = closingPrices[closingPrices.length - 1]; // Asegúrate de que closingPrices esté disponible aquí
+            const lastPrice = closingPrices[closingPrices.length - 1]; // Usamos el closingPrice de la lista de precios
 
             if (validBbUpper.length > 0 && validBbLower.length > 0 && lastPrice !== undefined) {
                 const lastBbUpper = validBbUpper[validBbUpper.length - 1].y;
@@ -561,10 +555,10 @@
             // Iniciar la actualización de todas las oportunidades al cargar
             updateAllCryptosOpportunities();
 
-            // Intervalo para la actualización de la criptomoneda seleccionada
-            setInterval(runSelectedCryptoAnalysis, UPDATE_INTERVAL);
+            // Intervalo para la actualización de la criptomoneda seleccionada (gráficos)
+            setInterval(runSelectedCryptoAnalysis, UPDATE_INTERVAL_SELECTED_CRYPTO);
             // Intervalo para la actualización de TODAS las oportunidades (puede ser más largo)
-            setInterval(updateAllCryptosOpportunities, UPDATE_INTERVAL * 2); // Ejemplo: cada 4 minutos
+            setInterval(updateAllCryptosOpportunities, UPDATE_INTERVAL_ALL_CRYPTOS); 
         });
 
         coinSelect.addEventListener('change', runSelectedCryptoAnalysis);
@@ -825,11 +819,13 @@
         }
         
         function updateSignals(smaShort, smaLong, rsi, bollingerBands) {
-            // Esta función solo actualiza los paneles individuales debajo de los gráficos
-            // No afecta el nuevo tablero de oportunidades general.
             smaSignalDiv.classList.remove('alert-buy', 'alert-sell');
             rsiSignalDiv.classList.remove('alert-buy', 'alert-sell');
             bbSignalDiv.classList.remove('alert-buy', 'alert-sell');
+
+            let smaRec = 'hold';
+            let rsiRec = 'hold';
+            let bbRec = 'hold';
 
             const validSmaShort = smaShort.filter(v => v !== null);
             const validSmaLong = smaLong.filter(v => v !== null);
@@ -875,7 +871,6 @@
 
             const validBbUpper = bollingerBands.upper.filter(v => v !== null);
             const validBbLower = bollingerBands.lower.filter(v => v !== null);
-            // Necesitamos el último precio de la cripto seleccionada para esta señal
             const currentPriceData = priceChartInstance?.data?.datasets[0]?.data.filter(v => v !== null);
 
             if (validBbUpper.length > 0 && validBbLower.length > 0 && currentPriceData && currentPriceData.length > 0) {
@@ -901,35 +896,50 @@
         }
         
         /**
-         * Función central para actualizar las 3 columnas de oportunidades.
-         * Se llama desde updateAllCryptosOpportunities.
+         * Función central para renderizar las 3 columnas de oportunidades en el DOM.
+         * Se llama repetidamente durante la carga progresiva.
+         * @param {object} recommendationsMap - Un objeto con arrays de símbolos para 'buy', 'sell', 'hold', 'error'.
          */
-        function updateOpportunityColumns(recommendationsMap) {
+        function renderOpportunityColumns(recommendationsMap) {
             buyList.innerHTML = '';
             sellList.innerHTML = '';
             holdList.innerHTML = '';
 
-            if (recommendationsMap.buy.length === 0) buyList.innerHTML = '<li>Ninguna</li>';
-            else recommendationsMap.buy.forEach(symbol => {
+            if (recommendationsMap.buy.length === 0 && recommendationsMap.error.length === 0 && recommendationsMap.hold.length === 0 && recommendationsMap.sell.length === 0) {
+                 // Si aún no hay datos, mostrar "Cargando..."
+                 buyList.innerHTML = '<li>Cargando...</li>';
+                 sellList.innerHTML = '<li>Cargando...</li>';
+                 holdList.innerHTML = '<li>Cargando...</li>';
+                 return;
+            }
+
+            // Ordenar alfabéticamente para una mejor visualización
+            recommendationsMap.buy.sort().forEach(symbol => {
                 const li = document.createElement('li');
                 li.textContent = symbol;
                 buyList.appendChild(li);
             });
+            if (recommendationsMap.buy.length === 0) buyList.innerHTML = '<li>Ninguna</li>';
 
-            if (recommendationsMap.sell.length === 0) sellList.innerHTML = '<li>Ninguna</li>';
-            else recommendationsMap.sell.forEach(symbol => {
+
+            recommendationsMap.sell.sort().forEach(symbol => {
                 const li = document.createElement('li');
                 li.textContent = symbol;
                 sellList.appendChild(li);
             });
+            if (recommendationsMap.sell.length === 0) sellList.innerHTML = '<li>Ninguna</li>';
 
-            if (recommendationsMap.hold.length === 0) holdList.innerHTML = '<li>Ninguna</li>';
-            else recommendationsMap.hold.forEach(symbol => {
+
+            // Incluir errores o datos insuficientes en la columna de "Mantener"
+            const allHoldSymbols = [...recommendationsMap.hold, ...recommendationsMap.error];
+            allHoldSymbols.sort().forEach(symbol => {
                 const li = document.createElement('li');
                 li.textContent = symbol;
                 holdList.appendChild(li);
             });
-            console.log("Columnas de oportunidades actualizadas.");
+            if (allHoldSymbols.length === 0) holdList.innerHTML = '<li>Ninguna</li>';
+
+            // console.log("Columnas de oportunidades actualizadas en el DOM."); // Descomentar para depuración
         }
 
         function startUpdateTimer(seconds) {
