@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Tracker Online (Bybit)</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            width: 95%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+        }
+        .controls-and-opportunities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 95%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+        }
+        #controls {
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            flex: 1;
+            min-width: 280px;
+        }
+        #coin-select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background-color: #333;
+            color: #e0e0e0;
+            font-size: 1em;
+            width: 100%;
+        }
+        #update-timer {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-top: 5px;
+        }
+        #signals-panel {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            width: 95%;
+            max-width: 1200px;
+        }
+        .signal {
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+            flex-grow: 1;
+            min-width: 150px;
+        }
+        .buy { background-color: #28a745; color: white; }
+        .sell { background-color: #dc3545; color: white; }
+        .hold { background-color: #6c757d; color: white; }
+        .overbought { background-color: #ffc107; color: #121212; }
+        .oversold { background-color: #17a2b8; color: white; }
+        /* Estilos para las alertas visuales */
+        .alert-buy {
+            animation: pulse-buy 1s infinite alternate;
+            border: 2px solid #28a745;
+        }
+        .alert-sell {
+            animation: pulse-sell 1s infinite alternate;
+            border: 2px solid #dc3545;
+        }
+        @keyframes pulse-buy {
+            from { box-shadow: 0 0 5px #28a745; }
+            to { box-shadow: 0 0 20px #28a745; }
+        }
+        @keyframes pulse-sell {
+            from { box-shadow: 0 0 5px #dc3545; }
+            to { box-shadow: 0 0 20px #dc3545; }
+        }
+        .chart-container {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin-top: 20px;
+            height: 450px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .rsi-explanation {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(30, 30, 30, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            color: #ccc;
+            max-width: 250px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .no-data-message {
+            color: #e0e0e0;
+            font-size: 1.5em;
+            text-align: center;
+        }
+        
+        /* Estilos para los tableros de oportunidades */
+        #opportunities-board, #historical-recommendations-board {
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            flex: 2;
+            min-width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Espacio entre el título y la lista */
+        }
+        #opportunities-board h2, #historical-recommendations-board h2 {
+            color: #e0e0e0;
+            margin-top: 0;
+            margin-bottom: 5px; /* Ajuste para gap */
+            text-align: center;
+        }
+        #opportunities-board ul, #historical-recommendations-board ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1; /* Permite que la lista ocupe el espacio restante */
+            overflow-y: auto; /* Para desplazamiento si hay muchas entradas */
+            max-height: 200px; /* Altura máxima para la lista histórica */
+        }
+        #opportunities-board li, #historical-recommendations-board li {
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95em; /* Ajuste de tamaño de fuente para la lista histórica */
+        }
+        #opportunities-board li:last-child, #historical-recommendations-board li:last-child {
+            border-bottom: none;
+        }
+        .opportunity-item {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .opportunity-label {
+            font-weight: bold;
+        }
+        .opportunity-action {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }
+        .action-buy { background-color: #28a745; color: white; }
+        .action-sell { background-color: #dc3545; color: white; }
+        .action-hold { background-color: #6c757d; color: white; }
+        .historical-timestamp {
+            font-size: 0.8em;
+            color: #aaa;
+            margin-left: 10px;
+        }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
+</head>
+<body>
+    <h1>Crypto Tracker Online (Bybit Data)</h1>
+
+    <div class="controls-and-opportunities">
+        <div id="controls">
+            <label for="coin-select">Elige una Criptomoneda:</label>
+            <select id="coin-select">
+                <option value="USDTUSDC">USDT/USDC</option>
+                <option value="USDCUSDT">USDC/USDT</option>
+                <option value="BUSDUSDT">BUSD/USDT</option>
+                <option value="DAIUSDT">DAI/USDT</option>
+                
+                <option value="BTCUSDT" selected>Bitcoin (BTC/USDT)</option>
+                <option value="ETHUSDT">Ethereum (ETH/USDT)</option>
+                <option value="BNBUSDT">BNB (BNB/USDT)</option>
+                <option value="XRPUSDT">XRP (XRP/USDT)</option>
+                <option value="SOLUSDT">Solana (SOL/USDT)</option>
+                <option value="ADAUSDT">Cardano (ADA/USDT)</option>
+                <option value="DOGEUSDT">Dogecoin (DOGE/USDT)</option>
+                <option value="SHIBUSDT">Shiba Inu (SHIB/USDT)</option>
+                <option value="DOTUSDT">Polkadot (DOT/USDT)</option>
+                <option value="LTCUSDT">Litecoin (LTC/USDT)</option>
+                <option value="LINKUSDT">Chainlink (LINK/USDT)</option>
+                <option value="MATICUSDT">Polygon (MATIC/USDT)</option>
+                <option value="TRXUSDT">Tron (TRX/USDT)</option>
+                <option value="AVAXUSDT">Avalanche (AVAX/USDT)</option>
+                <option value="UNIUSDT">Uniswap (UNI/USDT)</option>
+                <option value="FILUSDT">Filecoin (FIL/USDT)</option>
+                <option value="ICPUSDT">Internet Computer (ICP/USDT)</option>
+                <option value="APTUSDT">Aptos (APT/USDT)</option>
+                <option value="SUIUSDT">Sui (SUI/USDT)</option>
+                <option value="NEARUSDT">NEAR Protocol (NEAR/USDT)</option>
+                <option value="ATOMUSDT">Cosmos (ATOM/USDT)</option>
+                <option value="ARBUSD">Arbitrum (ARB/USDT)</option>
+                <option value="OPUSDT">Optimism (OP/USDT)</option>
+                <option value="IMXUSDT">Immutable X (IMX/USDT)</option>
+                <option value="AAVEUSDT">Aave (AAVE/USDT)</option>
+                <option value="ALGOUSDT">Algorand (ALGO/USDT)</option>
+                <option value="FTMUSDT">Fantom (FTM/USDT)</option>
+                <option value="VETUSDT">VeChain (VET/USDT)</option>
+                <option value="CHZUSDT">Chiliz (CHZ/USDT)</option>
+                <option value="GRTUSDT">The Graph (GRT/USDT)</option>
+                <option value="AXSUSDT">Axie Infinity (AXS/USDT)</option>
+                <option value="EOSUSDT">EOS (EOS/USDT)</option>
+                <option value="KLAYUSDT">Klaytn (KLAY/USDT)</option>
+                <option value="SANDUSDT">The Sandbox (SAND/USDT)</option>
+                <option value="MANAUSDT">Decentraland (MANA/USDT)</option>
+            </select>
+            <div id="update-timer"></div>
+        </div>
+
+        <div id="opportunities-board">
+            <h2>Oportunidades de Trading Actual</h2>
+            <ul id="opportunity-list">
+                <li><div class="opportunity-item"><span class="opportunity-label">BTCUSDT</span> <span class="opportunity-action action-hold">Esperando...</span></div></li>
+            </ul>
+            <p style="font-size: 0.8em; color: #888; margin-top: 10px;">
+                Esta sección muestra la recomendación de trading para la criptomoneda actualmente seleccionada,
+                basada en la combinación de señales de SMA, RSI y Bandas de Bollinger.
+            </p>
+        </div>
+
+        <div id="historical-recommendations-board">
+            <h2>Historial de Recomendaciones (Últimas 24h)</h2>
+            <ul id="historical-list">
+                <li><div class="opportunity-item"><span class="opportunity-label">Historial para la crypto seleccionada.</span> <span class="historical-timestamp"></span></div></li>
+            </ul>
+            <p style="font-size: 0.8em; color: #888; margin-top: 10px;">
+                Muestra las recomendaciones pasadas para la criptomoneda *actualmente seleccionada*.
+                El historial se guarda en tu navegador y se borra automáticamente después de 24 horas.
+            </p>
+        </div>
+    </div>
+
+    <div id="signals-panel" class="container">
+        <div id="sma-signal" class="signal hold">Cargando...</div>
+        <div id="rsi-signal" class="signal hold">Cargando...</div>
+        <div id="bb-signal" class="signal hold">Cargando...</div>
+    </div>
+    
+    <div id="price-chart-container" class="chart-container container">
+        <canvas id="priceChart"></canvas>
+        <div id="price-no-data" class="no-data-message" style="display:none;">No hay datos para mostrar el gráfico de precios.</div>
+    </div>
+    
+    <div id="rsi-chart-container" class="chart-container container">
+        <canvas id="rsiChart"></canvas>
+        <div id="rsi-no-data" class="no-data-message" style="display:none;">No hay datos para mostrar el gráfico de RSI.</div>
+        <div class="rsi-explanation">
+            <strong>RSI (Índice de Fuerza Relativa):</strong>
+            <br>
+            Mide la velocidad y cambio de los movimientos de precios.
+            <br>
+            <ul>
+                <li>Valores sobre 70 indican <strong>sobrecompra</strong> (posible reversión a la baja).</li>
+                <li>Valores bajo 30 indican <strong>sobreventa</strong> (posible reversión al alza).</li>
+            </ul>
+            Es un oscilador de momentum.
+        </div>
+    </div>
+
+    <script>
+        // ===================================================================================
+        // --- CONFIGURACIÓN E INICIALIZACIÓN ---
+        // ===================================================================================
+
+        const BYBIT_INTERVAL = "60"; 
+        const BYBIT_CATEGORY = "spot";
+        const BYBIT_LIMIT = 200;
+
+        const UPDATE_INTERVAL = 120000; // 2 minutos
+        const SMA_SHORT_PERIOD = 20;
+        const SMA_LONG_PERIOD = 50;
+        const BB_PERIOD = 20;
+        const BB_STD_DEV = 2;
+        const RSI_PERIOD = 14;
+        const RSI_OVERBOUGHT = 70;
+        const RSI_OVERSOLD = 30;
+
+        // Limite de entradas históricas por cripto para evitar sobrecargar localStorage
+        const MAX_HISTORICAL_ENTRIES = 50; 
+        const HISTORICAL_DURATION_MS = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
+
+        const coinSelect = document.getElementById('coin-select');
+        const updateTimerDiv = document.getElementById('update-timer');
+        const smaSignalDiv = document.getElementById('sma-signal');
+        const rsiSignalDiv = document.getElementById('rsi-signal');
+        const bbSignalDiv = document.getElementById('bb-signal');
+        const opportunityList = document.getElementById('opportunity-list');
+        const historicalList = document.getElementById('historical-list'); // Nuevo elemento para el historial
+
+        const priceChartCanvas = document.getElementById('priceChart');
+        const rsiChartCanvas = document.getElementById('rsiChart');
+        const priceNoDataMessage = document.getElementById('price-no-data');
+        const rsiNoDataMessage = document.getElementById('rsi-no-data');
+
+        let priceChartInstance, rsiChartInstance, countdownInterval;
+
+        // ===================================================================================
+        // --- LÓGICA PRINCIPAL ---
+        // ===================================================================================
+
+        async function runAnalysis() {
+            console.log("Iniciando runAnalysis...");
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            smaSignalDiv.textContent = 'Cargando...';
+            rsiSignalDiv.textContent = 'Cargando...';
+            bbSignalDiv.textContent = 'Cargando...';
+            smaSignalDiv.className = 'signal hold';
+            rsiSignalDiv.className = 'signal hold';
+            bbSignalDiv.className = 'signal hold';
+            updateTimerDiv.textContent = "";
+
+            priceNoDataMessage.style.display = 'none';
+            rsiNoDataMessage.style.display = 'none';
+            priceChartCanvas.style.display = 'block';
+            rsiChartCanvas.style.display = 'block';
+
+            const selectedSymbol = coinSelect.value;
+            console.log(`Obteniendo datos de Bybit para: ${selectedSymbol}`);
+
+            opportunityList.innerHTML = `<li><div class="opportunity-item"><span class="opportunity-label">${selectedSymbol}</span> <span class="opportunity-action action-hold">Analizando...</span></div></li>`; // Reiniciar la oportunidad actual
+
+            const prices = await getCryptoData(selectedSymbol, BYBIT_INTERVAL, BYBIT_CATEGORY, BYBIT_LIMIT);
+            
+            const minRequiredData = Math.max(SMA_LONG_PERIOD, BB_PERIOD, RSI_PERIOD);
+            if (!prices || prices.length < minRequiredData) {
+                console.error(`Datos insuficientes para calcular indicadores. Se necesitan al menos ${minRequiredData} puntos, se obtuvieron ${prices ? prices.length : 0}.`, prices);
+                smaSignalDiv.textContent = 'Error: Datos insuficientes.';
+                rsiSignalDiv.textContent = 'Error: Datos insuficientes.';
+                bbSignalDiv.textContent = 'Error: Datos insuficientes.';
+                updateTimerDiv.textContent = "Datos insuficientes para indicadores";
+                
+                opportunityList.innerHTML = `<li><div class="opportunity-item"><span class="opportunity-label">${selectedSymbol}</span> <span class="opportunity-action action-hold">Datos insuficientes</span></div></li>`;
+                
+                if (priceChartInstance) priceChartInstance.destroy();
+                if (rsiChartInstance) rsiChartInstance.destroy();
+                priceChartCanvas.style.display = 'none';
+                rsiChartCanvas.style.display = 'none';
+                priceNoDataMessage.style.display = 'flex';
+                rsiNoDataMessage.style.display = 'flex';
+                return;
+            }
+
+            console.log(`Datos recibidos. Número de puntos: ${prices.length}`);
+
+            const priceData = prices; 
+            const closingPrices = prices.map(p => p.y);
+
+            console.log("Calculando indicadores...");
+            const smaShort = calculateSMA(closingPrices, SMA_SHORT_PERIOD);
+            const smaLong = calculateSMA(closingPrices, SMA_LONG_PERIOD);
+            const bollingerBands = calculateBollingerBands(closingPrices, BB_PERIOD, BB_STD_DEV);
+            const rsi = calculateRSI(closingPrices, RSI_PERIOD);
+            
+            console.log("Renderizando gráficos...");
+            renderPriceChart(priceData, smaShort, smaLong, bollingerBands);
+            renderRsiChart(priceData, rsi);
+            
+            console.log("Actualizando señales...");
+            const signals = updateSignals(smaShort, smaLong, rsi, bollingerBands);
+            const overallRec = updateOpportunityBoard(selectedSymbol, signals); // Obtener la recomendación general
+            
+            // Guardar la recomendación en el historial
+            saveRecommendation(selectedSymbol, overallRec);
+            // Cargar y mostrar el historial actualizado
+            loadHistoricalRecommendations(selectedSymbol);
+
+            startUpdateTimer(UPDATE_INTERVAL / 1000);
+            console.log("Análisis completado.");
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM Cargado. Ejecutando análisis inicial.");
+            runAnalysis();
+            setInterval(runAnalysis, UPDATE_INTERVAL);
+        });
+
+        coinSelect.addEventListener('change', () => {
+            // Cuando cambia la criptomoneda, ejecutamos el análisis y cargamos el historial para la nueva crypto.
+            runAnalysis();
+            loadHistoricalRecommendations(coinSelect.value); // Cargar historial de la nueva crypto
+        });
+
+
+        // ===================================================================================
+        // --- FUNCIONES DE OBTENCIÓN Y CÁLCULO (ADAPTADAS PARA BYBIT) ---
+        // ===================================================================================
+
+        async function getCryptoData(symbol, interval = "60", category = "spot", limit = 200) {
+            const url = `https://api.bybit.com/v5/market/kline?category=${category}&symbol=${symbol}&interval=${interval}&limit=${limit}`;
+
+            try {
+                console.log(`Haciendo fetch a Bybit: ${url} (Hora actual: ${new Date().toLocaleTimeString()})`);
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    const errorDetails = await response.text();
+                    const errorMessage = `Error de red de Bybit: ${response.status} - ${response.statusText}. Detalles: ${errorDetails.substring(0, 200)}...`;
+                    throw new Error(errorMessage);
+                }
+                
+                const data = await response.json();
+                
+                if (!data || !data.result || !data.result.list || data.result.list.length === 0) {
+                    throw new Error("La API de Bybit devolvió una respuesta válida pero sin datos de klines (lista vacía o nula).");
+                }
+                
+                console.log(`Datos de Bybit obtenidos exitosamente. Primeros 3 klines raw:`, data.result.list.slice(0, 3));
+
+                const formattedPrices = data.result.list.map(kline => ({
+                    x: parseInt(kline[0]),
+                    y: parseFloat(kline[4])
+                }));
+
+                console.log("Datos de Bybit formateados y ordenados.");
+                return formattedPrices.reverse(); 
+
+            } catch (error) {
+                console.error("Error al obtener datos de la API de Bybit en getCryptoData:", error);
+                updateTimerDiv.textContent = `Error de API de Bybit: ${error.message}`; 
+                
+                smaSignalDiv.textContent = 'Error de API.';
+                rsiSignalDiv.textContent = 'Error de API.';
+                bbSignalDiv.textContent = 'Error de API.';
+                opportunityList.innerHTML = `<li><div class="opportunity-item"><span class="opportunity-label">${symbol}</span> <span class="opportunity-action action-hold">Error de API</span></div></li>`;
+
+                if (priceChartInstance) priceChartInstance.destroy();
+                if (rsiChartInstance) rsiChartInstance.destroy();
+                priceChartCanvas.style.display = 'none';
+                rsiChartCanvas.style.display = 'none';
+                priceNoDataMessage.style.display = 'flex';
+                rsiNoDataMessage.style.display = 'flex';
+
+                return null;
+            }
+        }
+
+        function calculateSMA(data, period) {
+            let sma = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < period - 1) {
+                    sma.push(null);
+                } else {
+                    const slice = data.slice(i - period + 1, i + 1);
+                    const sum = slice.reduce((acc, val) => acc + val, 0);
+                    sma.push({ y: sum / period });
+                }
+            }
+            return sma;
+        }
+
+        function calculateBollingerBands(data, period, stdDevMultiplier) {
+            let middle = [], upper = [], lower = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < period - 1) {
+                    middle.push(null);
+                    upper.push(null);
+                    lower.push(null);
+                } else {
+                    const slice = data.slice(i - period + 1, i + 1);
+                    const mean = slice.reduce((acc, val) => acc + val, 0) / period;
+                    const stdDev = Math.sqrt(slice.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / period);
+                    
+                    middle.push({ y: mean });
+                    upper.push({ y: mean + (stdDev * stdDevMultiplier) });
+                    lower.push({ y: mean - (stdDev * stdDevMultiplier) });
+                }
+            }
+            return { middle, upper, lower };
+        }
+
+        function calculateRSI(data, period) {
+            let rsiValues = [];
+            
+            for (let i = 0; i < period; i++) {
+                rsiValues.push(null);
+            }
+
+            if (data.length < period + 1) {
+                return rsiValues;
+            }
+
+            let avgGain = 0;
+            let avgLoss = 0;
+
+            for (let i = 1; i <= period; i++) {
+                const diff = data[i] - data[i - 1];
+                if (diff > 0) {
+                    avgGain += diff;
+                } else {
+                    avgLoss += Math.abs(diff);
+                }
+            }
+            avgGain /= period;
+            avgLoss /= period;
+
+            if (avgLoss === 0) {
+                rsiValues.push({ y: 100 });
+            } else {
+                const rs = avgGain / avgLoss;
+                rsiValues.push({ y: 100 - (100 / (1 + rs)) });
+            }
+
+            for (let i = period + 1; i < data.length; i++) {
+                const diff = data[i] - data[i - 1];
+                let currentGain = diff > 0 ? diff : 0;
+                let currentLoss = diff < 0 ? Math.abs(diff) : 0;
+
+                avgGain = ((avgGain * (period - 1)) + currentGain) / period;
+                avgLoss = ((avgLoss * (period - 1)) + currentLoss) / period;
+
+                if (avgLoss === 0) {
+                    rsiValues.push({ y: 100 });
+                } else {
+                    const rs = avgGain / avgLoss;
+                    rsiValues.push({ y: 100 - (100 / (1 + rs)) });
+                }
+            }
+            return rsiValues;
+        }
+
+        // ===================================================================================
+        // --- FUNCIONES DE RENDERIZADO Y SEÑALES ---
+        // ===================================================================================
+
+        function renderPriceChart(priceData, smaShort, smaLong, bb) {
+            if (priceChartInstance) priceChartInstance.destroy();
+
+            const ctx = priceChartCanvas.getContext('2d');
+            priceChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        { label: 'Precio (USD)', data: priceData, borderColor: '#36a2eb', borderWidth: 2.5, pointRadius: 0, tension: 0.1, fill: false },
+                        { label: `SMA ${SMA_SHORT_PERIOD}`, data: smaShort.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), borderColor: '#ffce56', borderWidth: 1.5, pointRadius: 0, fill: false },
+                        { label: `SMA ${SMA_LONG_PERIOD}`, data: smaLong.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), borderColor: '#ff6384', borderWidth: 1.5, pointRadius: 0, fill: false },
+                        { 
+                            label: `BB Superior`, 
+                            data: bb.upper.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), 
+                            borderColor: 'rgba(153, 102, 255, 0.5)', 
+                            borderWidth: 1, 
+                            pointRadius: 0, 
+                            fill: false
+                        },
+                        { 
+                            label: `BB Inferior`, 
+                            data: bb.lower.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), 
+                            borderColor: 'rgba(153, 102, 255, 0.5)', 
+                            borderWidth: 1, 
+                            pointRadius: 0, 
+                            fill: '-1',
+                            backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                            hidden: false
+                        },
+                        { label: `BB Media`, data: bb.middle.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null), borderColor: 'rgba(153, 102, 255, 0.8)', borderWidth: 1.5, pointRadius: 0, borderDash: [5, 5], fill: false }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { 
+                            type: 'time', 
+                            time: { 
+                                unit: 'hour', 
+                                tooltipFormat: 'HH:mm dd/MM/yy',
+                                displayFormats: {
+                                    hour: 'HH:mm',
+                                    day: 'dd/MM'
+                                }
+                            },
+                            title: { display: true, text: 'Fecha/Hora', color: '#e0e0e0' },
+                            ticks: { color: '#e0e0e0' },
+                            grid: { color: '#333' }
+                        },
+                        y: { 
+                            title: { display: true, text: 'Precio (USD)', color: '#e0e0e0' },
+                            ticks: { color: '#e0e0e0' },
+                            grid: { color: '#333' }
+                        }
+                    },
+                    plugins: {
+                        tooltip: { mode: 'index', intersect: false },
+                        legend: { labels: { color: '#e0e0e0' } }
+                    }
+                }
+            });
+            console.log("Gráfico de precios renderizado.");
+        }
+
+        function renderRsiChart(priceData, rsi) {
+            if (rsiChartInstance) rsiChartInstance.destroy();
+            const ctx = rsiChartCanvas.getContext('2d');
+            rsiChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: `RSI (${RSI_PERIOD})`,
+                        data: rsi.map((val, i) => val ? { x: priceData[i].x, y: val.y } : null),
+                        borderColor: '#4bc0c0',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { 
+                            type: 'time', 
+                            time: { unit: 'hour', display: false },
+                            grid: { color: '#333' }
+                        },
+                        y: { 
+                            min: 0, 
+                            max: 100,
+                            title: { display: true, text: 'RSI', color: '#e0e0e0' },
+                            ticks: { color: '#e0e0e0' },
+                            grid: { color: '#333' }
+                        }
+                    },
+                    plugins: {
+                        tooltip: { mode: 'index', intersect: false },
+                        legend: { labels: { color: '#e0e0e0' } },
+                        annotation: {
+                            annotations: {
+                                overbought: { 
+                                    type: 'line', 
+                                    yMin: RSI_OVERBOUGHT, 
+                                    yMax: RSI_OVERBOUGHT, 
+                                    borderColor: 'red', 
+                                    borderWidth: 1, 
+                                    borderDash: [5, 5], 
+                                    label: { content: 'Sobrecompra', enabled: true, position: 'start', color: '#e0e0e0', backgroundColor: 'rgba(255, 0, 0, 0.5)'} 
+                                },
+                                oversold: { 
+                                    type: 'line', 
+                                    yMin: RSI_OVERSOLD, 
+                                    yMax: RSI_OVERSOLD, 
+                                    borderColor: 'green', 
+                                    borderWidth: 1, 
+                                    borderDash: [5, 5], 
+                                    label: { content: 'Sobreventa', enabled: true, position: 'start', color: '#e0e0e0', backgroundColor: 'rgba(0, 128, 0, 0.5)'} 
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            console.log("Gráfico RSI renderizado.");
+        }
+        
+        function updateSignals(smaShort, smaLong, rsi, bollingerBands) {
+            smaSignalDiv.classList.remove('alert-buy', 'alert-sell');
+            rsiSignalDiv.classList.remove('alert-buy', 'alert-sell');
+            bbSignalDiv.classList.remove('alert-buy', 'alert-sell');
+
+            let smaRec = 'hold';
+            let rsiRec = 'hold';
+            let bbRec = 'hold';
+
+            const validSmaShort = smaShort.filter(v => v !== null);
+            const validSmaLong = smaLong.filter(v => v !== null);
+
+            if (validSmaShort.length >= 2 && validSmaLong.length >= 2) {
+                const lastSmaShort = validSmaShort[validSmaShort.length - 1].y;
+                const prevSmaShort = validSmaShort[validSmaShort.length - 2].y;
+                const lastSmaLong = validSmaLong[validSmaLong.length - 1].y;
+                const prevSmaLong = validSmaLong[validSmaLong.length - 2].y;
+
+                if (prevSmaShort <= prevSmaLong && lastSmaShort > lastSmaLong) {
+                    smaSignalDiv.textContent = 'Cruce SMA: COMPRA 📈 (Corto > Largo)';
+                    smaSignalDiv.className = 'signal buy alert-buy';
+                    smaRec = 'buy';
+                } else if (prevSmaShort >= prevSmaLong && lastSmaShort < lastSmaLong) {
+                    smaSignalDiv.textContent = 'Cruce SMA: VENTA 📉 (Corto < Largo)';
+                    smaSignalDiv.className = 'signal sell alert-sell';
+                    smaRec = 'sell';
+                } else {
+                    smaSignalDiv.textContent = 'Cruce SMA: Mantener 😐';
+                    smaSignalDiv.className = 'signal hold';
+                }
+            } else {
+                smaSignalDiv.textContent = 'Cruce SMA: Datos insuficientes';
+                smaSignalDiv.className = 'signal hold';
+            }
+
+            const validRsi = rsi.filter(v => v !== null);
+            if (validRsi.length > 0) {
+                const lastRsi = validRsi[validRsi.length - 1].y;
+                if (lastRsi > RSI_OVERBOUGHT) {
+                    rsiSignalDiv.textContent = `RSI (${lastRsi.toFixed(1)}): Sobrecompra ⚠️`;
+                    rsiSignalDiv.className = 'signal overbought alert-sell';
+                    rsiRec = 'sell';
+                } else if (lastRsi < RSI_OVERSOLD) {
+                    rsiSignalDiv.textContent = `RSI (${lastRsi.toFixed(1)}): Sobreventa ✅`;
+                    rsiSignalDiv.className = 'signal oversold alert-buy';
+                    rsiRec = 'buy';
+                } else {
+                    rsiSignalDiv.textContent = `RSI (${lastRsi.toFixed(1)}): Neutral ⚖️`;
+                    rsiSignalDiv.className = 'signal hold';
+                }
+            } else {
+                rsiSignalDiv.textContent = 'RSI: Datos insuficientes';
+                rsiSignalDiv.className = 'signal hold';
+            }
+
+            const validBbUpper = bollingerBands.upper.filter(v => v !== null);
+            const validBbLower = bollingerBands.lower.filter(v => v !== null);
+            const currentPriceData = priceChartInstance?.data?.datasets[0]?.data.filter(v => v !== null);
+
+            if (validBbUpper.length > 0 && validBbLower.length > 0 && currentPriceData && currentPriceData.length > 0) {
+                const lastPrice = currentPriceData[currentPriceData.length - 1].y;
+                const lastBbUpper = validBbUpper[validBbUpper.length - 1].y;
+                const lastBbLower = validBbLower[validBbLower.length - 1].y;
+                
+                if (lastPrice > lastBbUpper) {
+                    bbSignalDiv.textContent = `BB: Precio sobre banda superior ⬆️ (Venta)`;
+                    bbSignalDiv.className = 'signal sell alert-sell';
+                    bbRec = 'sell';
+                } else if (lastPrice < lastBbLower) {
+                    bbSignalDiv.textContent = `BB: Precio bajo banda inferior ⬇️ (Compra)`;
+                    bbSignalDiv.className = 'signal buy alert-buy';
+                    bbRec = 'buy';
+                } else {
+                    bbSignalDiv.textContent = 'BB: Precio dentro de la banda 🔄';
+                    bbSignalDiv.className = 'signal hold';
+                }
+            } else {
+                bbSignalDiv.textContent = 'BB: Datos insuficientes';
+                bbSignalDiv.className = 'signal hold';
+            }
+            console.log("Señales actualizadas.");
+
+            return { smaRec, rsiRec, bbRec };
+        }
+        
+        /**
+         * Actualiza el tablero de oportunidades basado en las recomendaciones.
+         * @param {string} symbol - El símbolo de la criptomoneda.
+         * @param {object} signals - Objeto con las recomendaciones individuales (smaRec, rsiRec, bbRec).
+         * @returns {string} La recomendación general ('buy', 'sell', 'hold').
+         */
+        function updateOpportunityBoard(symbol, signals) {
+            let overallRecommendation = 'hold';
+            let recommendationText = 'Mantener';
+            let recommendationClass = 'action-hold';
+
+            let buyCount = 0;
+            let sellCount = 0;
+
+            if (signals.smaRec === 'buy') buyCount++;
+            if (signals.rsiRec === 'buy') buyCount++;
+            if (signals.bbRec === 'buy') buyCount++;
+
+            if (signals.smaRec === 'sell') sellCount++;
+            if (signals.rsiRec === 'sell') sellCount++;
+            if (signals.bbRec === 'sell') sellCount++;
+
+            if (buyCount > sellCount) {
+                overallRecommendation = 'buy';
+                recommendationText = 'COMPRA';
+                recommendationClass = 'action-buy';
+            } else if (sellCount > buyCount) {
+                overallRecommendation = 'sell';
+                recommendationText = 'VENTA';
+                recommendationClass = 'action-sell';
+            } else {
+                overallRecommendation = 'hold';
+                recommendationText = 'MANTENER';
+                recommendationClass = 'action-hold';
+            }
+
+            opportunityList.innerHTML = `
+                <li>
+                    <div class="opportunity-item">
+                        <span class="opportunity-label">${symbol}</span>
+                        <span class="opportunity-action ${recommendationClass}">${recommendationText}</span>
+                    </div>
+                </li>
+            `;
+            return overallRecommendation;
+        }
+
+        /**
+         * Guarda la recomendación actual en el historial de localStorage para la criptomoneda.
+         * @param {string} symbol - El símbolo de la criptomoneda.
+         * @param {string} recommendation - La recomendación ('buy', 'sell', 'hold').
+         */
+        function saveRecommendation(symbol, recommendation) {
+            const key = `historicalRecs_${symbol}`;
+            let history = JSON.parse(localStorage.getItem(key)) || [];
+            const currentTime = new Date().getTime();
+
+            // Limpiar entradas antiguas (más de 24h)
+            history = history.filter(entry => (currentTime - entry.timestamp) < HISTORICAL_DURATION_MS);
+
+            // Añadir la nueva recomendación (al principio para que se vea la más reciente primero)
+            history.unshift({
+                timestamp: currentTime,
+                recommendation: recommendation
+            });
+
+            // Limitar el número de entradas para evitar sobrecarga
+            if (history.length > MAX_HISTORICAL_ENTRIES) {
+                history = history.slice(0, MAX_HISTORICAL_ENTRIES);
+            }
+
+            localStorage.setItem(key, JSON.stringify(history));
+            console.log(`Recomendación "${recommendation}" guardada para ${symbol}.`);
+        }
+
+        /**
+         * Carga y muestra el historial de recomendaciones para la criptomoneda seleccionada.
+         * @param {string} symbol - El símbolo de la criptomoneda.
+         */
+        function loadHistoricalRecommendations(symbol) {
+            const key = `historicalRecs_${symbol}`;
+            let history = JSON.parse(localStorage.getItem(key)) || [];
+            const currentTime = new Date().getTime();
+
+            // Limpiar entradas antiguas al cargar también
+            history = history.filter(entry => (currentTime - entry.timestamp) < HISTORICAL_DURATION_MS);
+            localStorage.setItem(key, JSON.stringify(history)); // Guardar la lista limpia
+
+            historicalList.innerHTML = ''; // Limpiar el tablero antes de añadir nuevas entradas
+
+            if (history.length === 0) {
+                historicalList.innerHTML = `<li><div class="opportunity-item"><span class="opportunity-label">No hay historial para ${symbol} aún.</span></div></li>`;
+                return;
+            }
+
+            history.forEach(entry => {
+                const date = new Date(entry.timestamp);
+                const timeString = date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+                const dateString = date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
+
+                let recClass = 'action-hold';
+                let recText = 'MANTENER';
+                if (entry.recommendation === 'buy') {
+                    recClass = 'action-buy';
+                    recText = 'COMPRA';
+                } else if (entry.recommendation === 'sell') {
+                    recClass = 'action-sell';
+                    recText = 'VENTA';
+                }
+
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    <div class="opportunity-item">
+                        <span class="opportunity-label">${symbol}</span> 
+                        <span class="historical-timestamp">${dateString} ${timeString}</span>
+                        <span class="opportunity-action ${recClass}">${recText}</span>
+                    </div>
+                `;
+                historicalList.appendChild(listItem);
+            });
+            console.log(`Historial para ${symbol} cargado.`);
+        }
+
+
+        function startUpdateTimer(seconds) {
+            let remaining = seconds;
+            updateTimerDiv.textContent = `Próxima actualización en ${remaining}s...`;
+            countdownInterval = setInterval(() => {
+                remaining--;
+                if (remaining >= 0) {
+                    updateTimerDiv.textContent = `Próxima actualización en ${remaining}s...`;
+                }
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
