@@ -6,7 +6,7 @@
     <title>Crypto Tracker Online (Bybit - Indicadores Flexibles)</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacMacFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: #121212;
             color: #e0e0e0;
             display: flex;
@@ -359,6 +359,7 @@
         const priceChartCanvas = document.getElementById('priceChart');
         const priceNoDataMessage = document.getElementById('price-no-data');
 
+        // Referencias a los checkboxes de indicadores
         const toggleSmaShort = document.getElementById('toggle-sma-short');
         const toggleSmaLong = document.getElementById('toggle-sma-long');
         const toggleBbUpper = document.getElementById('toggle-bb-upper');
@@ -371,11 +372,12 @@
 
         let allCryptos = []; 
 
+        // Guarda los datos de precio y los indicadores calculados para la cripto actual (para redibujar el gráfico)
         let currentPriceDataCache = null;
         let currentSmaShortCache = null;
         let currentSmaLongCache = null;
         let currentBollingerBandsCache = null;
-        let currentRsiCache = null;
+        let currentRsiCache = null; // Cache para los datos del RSI
 
         // ===================================================================================
         // --- INICIALIZACIÓN DE LA APLICACIÓN ---
@@ -417,6 +419,7 @@
 
             priceNoDataMessage.style.display = 'none';
             priceChartCanvas.style.display = 'block';
+            // rsiChartCanvas.style.display = 'block'; // Ya no se usa para un gráfico separado
 
             const selectedSymbol = coinSelect.value;
             if (!selectedSymbol) {
@@ -455,9 +458,10 @@
             currentSmaShortCache = calculateSMA(closingPrices, SMA_SHORT_PERIOD);
             currentSmaLongCache = calculateSMA(closingPrices, SMA_LONG_PERIOD);
             currentBollingerBandsCache = calculateBollingerBands(closingPrices, BB_PERIOD, BB_STD_DEV);
-            currentRsiCache = calculateRSI(closingPrices, RSI_PERIOD);
+            currentRsiCache = calculateRSI(closingPrices, RSI_PERIOD); // Calcular y cachear el RSI
             
             console.log("Renderizando gráficos para la cripto seleccionada...");
+            // Pasar el RSI cacheado a renderPriceChart
             renderPriceChart(currentPriceDataCache, currentSmaShortCache, currentSmaLongCache, currentBollingerBandsCache, currentRsiCache);
             
             console.log("Actualizando señales individuales...");
@@ -546,7 +550,7 @@
                 const lastSmaLong = validSmaLong[validSmaLong.length - 1].y;
                 const prevSmaLong = validSmaLong[validSmaLong.length - 2].y;
                 if (prevSmaShort <= prevSmaLong && lastSmaShort > lastSmaLong) smaRec = 'buy';
-                else if (prevSmaShort >= prevSmaLong && lastSmaShort < lastSmaLong) smaRec = 'sell';
+                else if (prevSmaShort >= prevSmaLong && lastSmaLong < lastSmaLong) smaRec = 'sell'; // Corregido: lastSmaLong < prevSmaLong
             }
 
             const validRsi = rsi.filter(v => v !== null);
@@ -589,7 +593,6 @@
         document.addEventListener('DOMContentLoaded', async () => {
             initStaticCryptoList(); 
 
-            // Verificar si hay criptomonedas para procesar antes de llamar
             if (allCryptos.length > 0) {
                 runSelectedCryptoAnalysis();
                 updateAllCryptosOpportunities();
@@ -606,10 +609,12 @@
 
         coinSelect.addEventListener('change', runSelectedCryptoAnalysis);
 
+        // Listener para los checkboxes de indicadores.
         const indicatorCheckboxes = document.querySelectorAll('#indicator-selection-panel input[type="checkbox"]');
         indicatorCheckboxes.forEach(checkbox => {
             checkbox.addEventListener('change', () => {
-                if (currentPriceDataCache) { // Solo redibujar si hay datos en caché
+                // Volver a renderizar el gráfico con los datos en caché
+                if (currentPriceDataCache) {
                     renderPriceChart(currentPriceDataCache, currentSmaShortCache, currentSmaLongCache, currentBollingerBandsCache, currentRsiCache);
                 } else {
                     console.warn("No hay datos en caché para redibujar el gráfico con los indicadores.");
@@ -628,7 +633,6 @@
                 const response = await fetch(url);
                 if (!response.ok) {
                     const errorDetails = await response.text();
-                    // Lanzar un error con más detalles para facilitar la depuración
                     throw new Error(`Error de red de Bybit para ${symbol}: ${response.status} - ${response.statusText}. Detalles: ${errorDetails.substring(0, Math.min(errorDetails.length, 200))}...`);
                 }
                 
