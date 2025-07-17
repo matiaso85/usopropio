@@ -20,9 +20,10 @@
             max-width: 1200px;
             margin-bottom: 20px;
         }
-        .controls-and-opportunities {
+        /* Contenedor principal para controles, oportunidades y historial */
+        .top-section-container {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: wrap; /* Permite que los elementos se envuelvan */
             gap: 20px;
             width: 95%;
             max-width: 1200px;
@@ -36,8 +37,8 @@
             flex-direction: column;
             align-items: flex-start;
             gap: 10px;
-            flex: 1;
-            min-width: 280px;
+            flex: 1; /* Permite que el control crezca */
+            min-width: 280px; /* Ancho mínimo para el control */
         }
         #coin-select {
             padding: 8px;
@@ -46,7 +47,7 @@
             background-color: #333;
             color: #e0e0e0;
             font-size: 1em;
-            width: 100%;
+            width: 100%; /* Ocupa todo el ancho disponible */
         }
         #update-timer {
             font-size: 0.9em;
@@ -58,7 +59,7 @@
             gap: 15px;
             justify-content: center;
             flex-wrap: wrap;
-            margin-top: 20px;
+            margin-top: 20px; /* Ajuste para separar de los gráficos */
             width: 95%;
             max-width: 1200px;
         }
@@ -124,41 +125,41 @@
             text-align: center;
         }
         
-        /* Estilos para los tableros de oportunidades */
-        #opportunities-board, #historical-recommendations-board {
+        /* Estilos para los tableros */
+        #historical-recommendations-board {
             background-color: #1e1e1e;
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            flex: 2;
-            min-width: 350px;
+            flex: 1; /* Permite que este tablero crezca */
+            min-width: 300px; /* Ancho mínimo para el tablero de historial */
             display: flex;
             flex-direction: column;
-            gap: 10px; /* Espacio entre el título y la lista */
+            gap: 10px;
         }
-        #opportunities-board h2, #historical-recommendations-board h2 {
+        #historical-recommendations-board h2 {
             color: #e0e0e0;
             margin-top: 0;
-            margin-bottom: 5px; /* Ajuste para gap */
+            margin-bottom: 5px;
             text-align: center;
         }
-        #opportunities-board ul, #historical-recommendations-board ul {
+        #historical-recommendations-board ul {
             list-style: none;
             padding: 0;
             margin: 0;
-            flex-grow: 1; /* Permite que la lista ocupe el espacio restante */
-            overflow-y: auto; /* Para desplazamiento si hay muchas entradas */
-            max-height: 200px; /* Altura máxima para la lista histórica */
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: 250px; /* Altura máxima para la lista histórica */
         }
-        #opportunities-board li, #historical-recommendations-board li {
+        #historical-recommendations-board li {
             padding: 8px 0;
             border-bottom: 1px solid #333;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.95em; /* Ajuste de tamaño de fuente para la lista histórica */
+            font-size: 0.95em;
         }
-        #opportunities-board li:last-child, #historical-recommendations-board li:last-child {
+        #historical-recommendations-board li:last-child {
             border-bottom: none;
         }
         .opportunity-item {
@@ -184,6 +185,69 @@
             margin-left: 10px;
         }
 
+        /* NUEVOS ESTILOS para el tablero de oportunidades por columnas */
+        #current-opportunities-board {
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            flex: 3; /* Ocupa más espacio que los controles y el historial */
+            min-width: 450px; /* Ancho mínimo para el tablero de oportunidades */
+            display: flex;
+            flex-direction: column; /* Cambiado a columna para el título y luego las columnas */
+            gap: 10px;
+        }
+        #current-opportunities-board h2 {
+            color: #e0e0e0;
+            margin-top: 0;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        .opportunity-columns {
+            display: flex;
+            gap: 10px; /* Espacio entre las columnas */
+            flex-grow: 1; /* Permite que las columnas ocupen el espacio restante */
+        }
+        .opportunity-column {
+            background-color: #2a2a2a; /* Fondo ligeramente diferente para cada columna */
+            padding: 10px;
+            border-radius: 6px;
+            flex: 1; /* Hace que cada columna ocupe el mismo espacio */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .opportunity-column h3 {
+            color: #e0e0e0;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            text-align: center;
+        }
+        .opportunity-column ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 100%; /* Las listas ocupan el ancho de su columna */
+        }
+        .opportunity-column li {
+            background-color: #333;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            font-size: 1em;
+            display: flex;
+            justify-content: center; /* Centrar el texto del símbolo */
+            align-items: center;
+            font-weight: bold;
+        }
+        .opportunity-column li:last-child {
+            margin-bottom: 0;
+        }
+        .col-buy li { border-left: 4px solid #28a745; }
+        .col-sell li { border-left: 4px solid #dc3545; }
+        .col-hold li { border-left: 4px solid #6c757d; }
+
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -192,7 +256,7 @@
 <body>
     <h1>Crypto Tracker Online (Bybit Data)</h1>
 
-    <div class="controls-and-opportunities">
+    <div class="top-section-container">
         <div id="controls">
             <label for="coin-select">Elige una Criptomoneda:</label>
             <select id="coin-select">
@@ -240,12 +304,27 @@
             <div id="update-timer"></div>
         </div>
 
-        <div id="opportunities-board">
+        <div id="current-opportunities-board">
             <h2>Oportunidades de Trading Actual</h2>
-            <ul id="opportunity-list">
-                <li><div class="opportunity-item"><span class="opportunity-label">BTCUSDT</span> <span class="opportunity-action action-hold">Esperando...</span></div></li>
-            </ul>
-            <p style="font-size: 0.8em; color: #888; margin-top: 10px;">
+            <div class="opportunity-columns">
+                <div class="opportunity-column col-buy">
+                    <h3>COMPRA</h3>
+                    <ul id="buy-list">
+                        </ul>
+                </div>
+                <div class="opportunity-column col-sell">
+                    <h3>VENTA</h3>
+                    <ul id="sell-list">
+                        </ul>
+                </div>
+                <div class="opportunity-column col-hold">
+                    <h3>MANTENER</h3>
+                    <ul id="hold-list">
+                        <li>BTCUSDT</li>
+                    </ul>
+                </div>
+            </div>
+            <p style="font-size: 0.8em; color: #888; margin-top: 10px; text-align: center;">
                 Esta sección muestra la recomendación de trading para la criptomoneda actualmente seleccionada,
                 basada en la combinación de señales de SMA, RSI y Bandas de Bollinger.
             </p>
@@ -254,9 +333,9 @@
         <div id="historical-recommendations-board">
             <h2>Historial de Recomendaciones (Últimas 24h)</h2>
             <ul id="historical-list">
-                <li><div class="opportunity-item"><span class="opportunity-label">Historial para la crypto seleccionada.</span> <span class="historical-timestamp"></span></div></li>
+                <li><div class="opportunity-item"><span class="opportunity-label">Historial para la crypto seleccionada.</span></div></li>
             </ul>
-            <p style="font-size: 0.8em; color: #888; margin-top: 10px;">
+            <p style="font-size: 0.8em; color: #888; margin-top: 10px; text-align: center;">
                 Muestra las recomendaciones pasadas para la criptomoneda *actualmente seleccionada*.
                 El historial se guarda en tu navegador y se borra automáticamente después de 24 horas.
             </p>
@@ -276,7 +355,6 @@
     
     <div id="rsi-chart-container" class="chart-container container">
         <canvas id="rsiChart"></canvas>
-        <div id="rsi-no-data" class="no-data-message" style="display:none;">No hay datos para mostrar el gráfico de RSI.</div>
         <div class="rsi-explanation">
             <strong>RSI (Índice de Fuerza Relativa):</strong>
             <br>
@@ -288,6 +366,7 @@
             </ul>
             Es un oscilador de momentum.
         </div>
+        <div id="rsi-no-data" class="no-data-message" style="display:none;">No hay datos para mostrar el gráfico de RSI.</div>
     </div>
 
     <script>
@@ -308,7 +387,6 @@
         const RSI_OVERBOUGHT = 70;
         const RSI_OVERSOLD = 30;
 
-        // Limite de entradas históricas por cripto para evitar sobrecargar localStorage
         const MAX_HISTORICAL_ENTRIES = 50; 
         const HISTORICAL_DURATION_MS = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
 
@@ -317,8 +395,13 @@
         const smaSignalDiv = document.getElementById('sma-signal');
         const rsiSignalDiv = document.getElementById('rsi-signal');
         const bbSignalDiv = document.getElementById('bb-signal');
-        const opportunityList = document.getElementById('opportunity-list');
-        const historicalList = document.getElementById('historical-list'); // Nuevo elemento para el historial
+        
+        // Referencias a las nuevas listas de oportunidades
+        const buyList = document.getElementById('buy-list');
+        const sellList = document.getElementById('sell-list');
+        const holdList = document.getElementById('hold-list');
+
+        const historicalList = document.getElementById('historical-list');
 
         const priceChartCanvas = document.getElementById('priceChart');
         const rsiChartCanvas = document.getElementById('rsiChart');
@@ -335,6 +418,7 @@
             console.log("Iniciando runAnalysis...");
             if (countdownInterval) clearInterval(countdownInterval);
 
+            // Resetear mensajes y estados visuales
             smaSignalDiv.textContent = 'Cargando...';
             rsiSignalDiv.textContent = 'Cargando...';
             bbSignalDiv.textContent = 'Cargando...';
@@ -343,6 +427,11 @@
             bbSignalDiv.className = 'signal hold';
             updateTimerDiv.textContent = "";
 
+            // Limpiar las listas de oportunidades
+            buyList.innerHTML = '';
+            sellList.innerHTML = '';
+            holdList.innerHTML = `<li>Cargando...</li>`; // Mensaje inicial en "Mantener"
+
             priceNoDataMessage.style.display = 'none';
             rsiNoDataMessage.style.display = 'none';
             priceChartCanvas.style.display = 'block';
@@ -350,8 +439,6 @@
 
             const selectedSymbol = coinSelect.value;
             console.log(`Obteniendo datos de Bybit para: ${selectedSymbol}`);
-
-            opportunityList.innerHTML = `<li><div class="opportunity-item"><span class="opportunity-label">${selectedSymbol}</span> <span class="opportunity-action action-hold">Analizando...</span></div></li>`; // Reiniciar la oportunidad actual
 
             const prices = await getCryptoData(selectedSymbol, BYBIT_INTERVAL, BYBIT_CATEGORY, BYBIT_LIMIT);
             
@@ -363,7 +450,9 @@
                 bbSignalDiv.textContent = 'Error: Datos insuficientes.';
                 updateTimerDiv.textContent = "Datos insuficientes para indicadores";
                 
-                opportunityList.innerHTML = `<li><div class="opportunity-item"><span class="opportunity-label">${selectedSymbol}</span> <span class="opportunity-action action-hold">Datos insuficientes</span></div></li>`;
+                buyList.innerHTML = '';
+                sellList.innerHTML = '';
+                holdList.innerHTML = `<li>Datos insuficientes</li>`; // Mensaje de error en el tablero de oportunidad
                 
                 if (priceChartInstance) priceChartInstance.destroy();
                 if (rsiChartInstance) rsiChartInstance.destroy();
@@ -391,11 +480,9 @@
             
             console.log("Actualizando señales...");
             const signals = updateSignals(smaShort, smaLong, rsi, bollingerBands);
-            const overallRec = updateOpportunityBoard(selectedSymbol, signals); // Obtener la recomendación general
+            const overallRec = updateOpportunityBoard(selectedSymbol, signals);
             
-            // Guardar la recomendación en el historial
             saveRecommendation(selectedSymbol, overallRec);
-            // Cargar y mostrar el historial actualizado
             loadHistoricalRecommendations(selectedSymbol);
 
             startUpdateTimer(UPDATE_INTERVAL / 1000);
@@ -409,14 +496,13 @@
         });
 
         coinSelect.addEventListener('change', () => {
-            // Cuando cambia la criptomoneda, ejecutamos el análisis y cargamos el historial para la nueva crypto.
             runAnalysis();
-            loadHistoricalRecommendations(coinSelect.value); // Cargar historial de la nueva crypto
+            loadHistoricalRecommendations(coinSelect.value);
         });
 
 
         // ===================================================================================
-        // --- FUNCIONES DE OBTENCIÓN Y CÁLCULO (ADAPTADAS PARA BYBIT) ---
+        // --- FUNCIONES DE OBTENCIÓN Y CÁLCULO ---
         // ===================================================================================
 
         async function getCryptoData(symbol, interval = "60", category = "spot", limit = 200) {
@@ -455,7 +541,10 @@
                 smaSignalDiv.textContent = 'Error de API.';
                 rsiSignalDiv.textContent = 'Error de API.';
                 bbSignalDiv.textContent = 'Error de API.';
-                opportunityList.innerHTML = `<li><div class="opportunity-item"><span class="opportunity-label">${symbol}</span> <span class="opportunity-action action-hold">Error de API</span></div></li>`;
+                // Asegurarse de que el tablero de oportunidad actual también refleje el error
+                buyList.innerHTML = '';
+                sellList.innerHTML = '';
+                holdList.innerHTML = `<li>Error de API</li>`;
 
                 if (priceChartInstance) priceChartInstance.destroy();
                 if (rsiChartInstance) rsiChartInstance.destroy();
@@ -770,15 +859,20 @@
         }
         
         /**
-         * Actualiza el tablero de oportunidades basado en las recomendaciones.
+         * Actualiza el tablero de oportunidades por columnas (COMPRA, VENTA, MANTENER).
+         * Solo mostrará la criptomoneda actualmente seleccionada en su columna correspondiente.
          * @param {string} symbol - El símbolo de la criptomoneda.
          * @param {object} signals - Objeto con las recomendaciones individuales (smaRec, rsiRec, bbRec).
          * @returns {string} La recomendación general ('buy', 'sell', 'hold').
          */
         function updateOpportunityBoard(symbol, signals) {
             let overallRecommendation = 'hold';
-            let recommendationText = 'Mantener';
-            let recommendationClass = 'action-hold';
+            let recommendationText = 'MANTENER';
+            
+            // Limpiar todas las listas primero
+            buyList.innerHTML = '';
+            sellList.innerHTML = '';
+            holdList.innerHTML = '';
 
             let buyCount = 0;
             let sellCount = 0;
@@ -791,28 +885,22 @@
             if (signals.rsiRec === 'sell') sellCount++;
             if (signals.bbRec === 'sell') sellCount++;
 
+            // Lógica de decisión para la recomendación general
             if (buyCount > sellCount) {
                 overallRecommendation = 'buy';
                 recommendationText = 'COMPRA';
-                recommendationClass = 'action-buy';
+                buyList.innerHTML = `<li>${symbol}</li>`; // Añadir a la columna de COMPRA
             } else if (sellCount > buyCount) {
                 overallRecommendation = 'sell';
                 recommendationText = 'VENTA';
-                recommendationClass = 'action-sell';
+                sellList.innerHTML = `<li>${symbol}</li>`; // Añadir a la columna de VENTA
             } else {
                 overallRecommendation = 'hold';
                 recommendationText = 'MANTENER';
-                recommendationClass = 'action-hold';
+                holdList.innerHTML = `<li>${symbol}</li>`; // Añadir a la columna de MANTENER
             }
-
-            opportunityList.innerHTML = `
-                <li>
-                    <div class="opportunity-item">
-                        <span class="opportunity-label">${symbol}</span>
-                        <span class="opportunity-action ${recommendationClass}">${recommendationText}</span>
-                    </div>
-                </li>
-            `;
+            
+            console.log(`Recomendación general para ${symbol}: ${overallRecommendation}`);
             return overallRecommendation;
         }
 
@@ -826,16 +914,13 @@
             let history = JSON.parse(localStorage.getItem(key)) || [];
             const currentTime = new Date().getTime();
 
-            // Limpiar entradas antiguas (más de 24h)
             history = history.filter(entry => (currentTime - entry.timestamp) < HISTORICAL_DURATION_MS);
 
-            // Añadir la nueva recomendación (al principio para que se vea la más reciente primero)
             history.unshift({
                 timestamp: currentTime,
                 recommendation: recommendation
             });
 
-            // Limitar el número de entradas para evitar sobrecarga
             if (history.length > MAX_HISTORICAL_ENTRIES) {
                 history = history.slice(0, MAX_HISTORICAL_ENTRIES);
             }
@@ -853,11 +938,10 @@
             let history = JSON.parse(localStorage.getItem(key)) || [];
             const currentTime = new Date().getTime();
 
-            // Limpiar entradas antiguas al cargar también
             history = history.filter(entry => (currentTime - entry.timestamp) < HISTORICAL_DURATION_MS);
-            localStorage.setItem(key, JSON.stringify(history)); // Guardar la lista limpia
+            localStorage.setItem(key, JSON.stringify(history));
 
-            historicalList.innerHTML = ''; // Limpiar el tablero antes de añadir nuevas entradas
+            historicalList.innerHTML = '';
 
             if (history.length === 0) {
                 historicalList.innerHTML = `<li><div class="opportunity-item"><span class="opportunity-label">No hay historial para ${symbol} aún.</span></div></li>`;
